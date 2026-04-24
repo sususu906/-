@@ -5,35 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>科研贡献测算系统入口</title>
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e6ebf2;--blue:#2563eb;--soft:#eaf2ff;--shadow:0 18px 45px rgba(15,23,42,.08);--r:22px}
-*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;background:linear-gradient(180deg,#f8fbff,#f3f6fb);color:var(--text)}
-.wrap{max-width:1280px;margin:0 auto;padding:24px}.hero{background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#60a5fa);color:#fff;border-radius:28px;padding:32px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.hero h1{margin:0;font-size:34px;line-height:1.25}.hero p{margin:12px 0 0;color:#eaf2ff;line-height:1.8;font-size:15px}.heroCard{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:20px}.heroCard h2{margin:0 0 12px;font-size:18px}.statGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{border-radius:16px;background:rgba(255,255,255,.12);padding:14px}.stat .k{font-size:12px;color:#dbeafe}.stat .v{font-size:28px;font-weight:900;margin-top:4px}
-.sectionTitle{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:24px 0 14px}.sectionTitle h2{margin:0;font-size:22px}.sectionTitle span{font-size:13px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;min-height:210px}.card h3{margin:0;font-size:19px}.card p{margin:10px 0 18px;color:var(--muted);line-height:1.75;font-size:14px;flex:1}.tag{display:inline-flex;width:max-content;background:var(--soft);color:var(--blue);font-size:12px;font-weight:800;border-radius:999px;padding:6px 10px;margin-bottom:12px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;border-radius:13px;padding:0 15px;text-decoration:none;font-size:14px;font-weight:900}.btn.primary{background:var(--blue);color:#fff}.btn.light{background:#f3f4f6;color:#111827}.wide{grid-column:span 2}.note{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);color:#475467;line-height:1.8;font-size:14px}.note strong{color:#172033}.footer{margin:22px 0 8px;color:#667085;font-size:12px;text-align:center}
-@media(max-width:980px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.wrap{padding:14px}.hero{padding:22px}.hero h1{font-size:28px}}
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--line:#e6ebf2;--blue:#2563eb;--soft:#eaf2ff;--shadow:0 18px 45px rgba(15,23,42,.08);--r:22px}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;background:linear-gradient(180deg,#f8fbff,#f3f6fb);color:var(--text)}
+.wrap{max-width:1280px;margin:0 auto;padding:24px}
+.hero{background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#60a5fa);color:#fff;border-radius:28px;padding:32px;box-shadow:var(--shadow)}
+.hero h1{margin:0;font-size:34px;line-height:1.25}
+.sectionTitle{margin:24px 0 14px}
+.sectionTitle h2{margin:0;font-size:22px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:14px}
+.card h3{margin:0;font-size:19px}
+.tag{display:inline-flex;width:max-content;background:var(--soft);color:var(--blue);font-size:12px;font-weight:800;border-radius:999px;padding:6px 10px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;border-radius:13px;padding:0 15px;text-decoration:none;font-size:14px;font-weight:900}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.light{background:#f3f4f6;color:#111827}
+.wide{grid-column:span 2}
+@media(max-width:980px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.wrap{padding:14px}.hero{padding:22px}.hero h1{font-size:28px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <section class="hero">
-    <div><h1>科研贡献测算系统入口</h1><p>本网站整合 DEA+Malmquist 指数法、LMDI 法、生产函数法、余值法和输出结果报告。部署到静态网站平台后，可通过一个链接进入并使用各系统。</p></div>
-    <div class="heroCard"><h2>系统概览</h2><div class="statGrid"><div class="stat"><div class="k">测算方法</div><div class="v">4</div></div><div class="stat"><div class="k">报告模块</div><div class="v">1</div></div><div class="stat"><div class="k">部署方式</div><div class="v">静态</div></div><div class="stat"><div class="k">入口文件</div><div class="v">index</div></div></div></div>
+    <h1>科研贡献测算系统入口</h1>
   </section>
-  <div class="sectionTitle"><h2>推荐入口</h2><span>优先使用综合系统，里面已包含集中展示和各方法页面</span></div>
+
+  <div class="sectionTitle"><h2>推荐入口</h2></div>
   <div class="grid">
-    <article class="card wide"><span class="tag">综合入口</span><h3>科研贡献综合测算系统</h3><p>包含集中展示、输出结果报告、DEA+Malmquist 指数法、LMDI 法、生产函数法和余值法，可作为正式汇报和交付的主入口。</p><div class="actions"><a class="btn primary" href="systems/combined.html">进入综合系统</a><a class="btn light" href="systems/result-report.html">查看结果报告</a></div></article>
-    <article class="card"><span class="tag">报告</span><h3>评价结果报告</h3><p>汇总各方法输入数据与测算结果，可在浏览器中打印或另存为 PDF。</p><div class="actions"><a class="btn primary" href="systems/result-report.html">打开报告</a></div></article>
+    <article class="card wide">
+      <span class="tag">综合入口</span>
+      <h3>科研贡献综合测算系统</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/combined.html">进入综合系统</a>
+        <a class="btn light" href="systems/result-report.html">查看结果报告</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="tag">报告</span>
+      <h3>评价结果报告</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/result-report.html">打开报告</a>
+      </div>
+    </article>
   </div>
-  <div class="sectionTitle"><h2>单独系统入口</h2><span>需要单独演示某个方法时使用</span></div>
+
+  <div class="sectionTitle"><h2>单独系统入口</h2></div>
   <div class="grid">
-    <article class="card"><span class="tag">DEA</span><h3>DEA+Malmquist 指数法</h3><p>用于技术效率、Malmquist 指数分解和科研贡献率测算。</p><div class="actions"><a class="btn primary" href="systems/dea-malmquist.html">进入系统</a></div></article>
-    <article class="card"><span class="tag">LMDI</span><h3>LMDI 法</h3><p>用于科研资本存量、分解项和科研转化贡献率测算。</p><div class="actions"><a class="btn primary" href="systems/lmdi.html">进入系统</a></div></article>
-    <article class="card"><span class="tag">生产函数</span><h3>生产函数法</h3><p>用于投入产出弹性估计、检验结果和科研贡献率测算。</p><div class="actions"><a class="btn primary" href="systems/production-function.html">进入系统</a></div></article>
-    <article class="card"><span class="tag">余值法</span><h3>余值法</h3><p>用于技术要素收益分成率、贡献净值和图形化结果展示。</p><div class="actions"><a class="btn primary" href="systems/residual-method.html">进入系统</a></div></article>
+    <article class="card">
+      <span class="tag">DEA</span>
+      <h3>DEA+Malmquist 指数法</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/dea-malmquist.html">进入系统</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="tag">LMDI</span>
+      <h3>LMDI 法</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/lmdi.html">进入系统</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="tag">生产函数</span>
+      <h3>生产函数法</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/production-function.html">进入系统</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="tag">余值法</span>
+      <h3>余值法</h3>
+      <div class="actions">
+        <a class="btn primary" href="systems/residual-method.html">进入系统</a>
+      </div>
+    </article>
   </div>
-  <div class="sectionTitle"><h2>部署说明</h2></div>
-  <div class="note"><strong>本目录就是一个完整静态网站。</strong>部署时把整个文件夹上传到 GitHub Pages、Netlify、Vercel 或学校服务器即可，入口文件为 <strong>index.html</strong>。如果只想本地使用，直接双击 <strong>index.html</strong> 也可以打开。</div>
-  <div class="footer">科研贡献测算系统 · 静态网站交付版</div>
 </div>
 </body>
 </html>
