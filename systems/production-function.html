@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>生产函数法科研贡献测算</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--line:#e6ebf2;--text:#172033;--muted:#667085;--primary:#2563eb;--primarySoft:#eaf2ff;--danger:#be123c;--dangerSoft:#fff1f2;--shadow:0 10px 30px rgba(15,23,42,.06);--r:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:1680px;margin:0 auto;padding:22px}
+.hero{background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#60a5fa);color:#fff;border-radius:24px;padding:24px 28px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{margin:0;font-size:28px}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+@media (max-width:1280px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.card + .card{margin-top:18px}
+.title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.title h2{margin:0;font-size:18px}
+.badge{font-size:12px;font-weight:800;color:var(--primary);background:var(--primarySoft);padding:6px 10px;border-radius:999px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{height:38px;border:none;border-radius:12px;padding:0 14px;font-size:14px;font-weight:800;cursor:pointer}
+.primary{background:var(--primary);color:#fff}
+.light{background:#f3f4f6;color:#111827}
+.danger{background:var(--dangerSoft);color:var(--danger)}
+.select,.miniSelect{height:38px;border:1px solid #d6dde8;border-radius:12px;padding:0 12px;font-weight:700;background:#fff}
+.miniSelect{height:34px;font-size:12px;border-radius:10px;padding:0 10px}
+input[type="text"],input[type="number"]{border:1px solid #d6dde8;border-radius:10px;padding:7px 8px;font-size:13px;background:#fff}
+.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;min-width:1080px}
+th,td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:center;white-space:nowrap;font-size:13px}
+th{background:#f8fafc;color:#475569;position:sticky;top:0;z-index:1}
+td input{width:100%}
+.groupHead{background:#eef4ff !important;font-weight:900;color:#1f3b76}
+.subHead{background:#f8fafc !important;font-weight:800}
+.usedMark{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#ecfdf3;color:#027a48;font-size:11px;font-weight:800}
+.small{font-size:12px;color:var(--muted);line-height:1.75}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{padding:12px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#fff,#f8fbff)}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:24px;font-weight:900;margin-top:4px}
+.good{color:#027a48;font-weight:800}
+.formula{font-family:Consolas,Menlo,monospace;font-size:12px;background:#f8fafc;border:1px solid var(--line);padding:8px 10px;border-radius:10px;display:inline-block;line-height:1.7}
+
+.dimensionGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1280px){.dimensionGrid{grid-template-columns:1fr}}
+.dimensionBox{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fbfdff}
+.dimensionHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.dimensionName{height:36px;min-width:180px;font-weight:800}
+.dimensionTools{display:flex;gap:8px;flex-wrap:wrap}
+.indicatorList{display:flex;flex-direction:column;gap:8px}
+.indicatorRow{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.indicatorMain{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center}
+@media (max-width:980px){.indicatorMain{grid-template-columns:1fr;align-items:stretch}}
+.radioWrap{display:flex;align-items:center;justify-content:center}
+.radioWrap input{width:16px;height:16px}
+.indicatorLabel{height:34px;width:100%}
+.indicatorMeta{font-size:11px;color:var(--muted);margin-top:4px}
+.fieldDetails{margin-top:8px;padding:8px 10px;border:1px dashed #d6dde8;border-radius:10px;background:#f8fafc}
+.fieldDetails summary{cursor:pointer;font-size:12px;font-weight:700;color:#475467;list-style:none}
+.fieldDetails summary::-webkit-details-marker{display:none}
+.fieldDetails[open] summary{margin-bottom:8px}
+.fieldConfig{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.smallBtn{height:32px;padding:0 12px;font-size:12px;border-radius:10px}
+.fieldTag{display:inline-block;padding:3px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700}
+.noteBox{font-size:12px;color:#475467;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px 12px}
+.emptyState{font-size:12px;color:var(--muted);padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>生产函数法科研贡献测算</h1>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="card">
+        <div class="title"><h2>维度与指标设置</h2></div>
+        <div class="toolbar" style="margin-bottom:10px">
+          <button class="primary" onclick="addDimension()">新增维度</button>
+          <button class="light" onclick="resetDimensions()">恢复默认维度</button>
+          <button class="light" onclick="recalc()">重算</button>
+        </div>
+        <div class="dimensionGrid" id="dimensionEditor"></div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>输入数据</h2></div>
+        <div class="toolbar">
+          <button class="primary" onclick="recalc()">重算</button>
+          <button class="light" onclick="resetAll()">恢复默认数据</button>
+          <select class="select" id="blockSel" onchange="renderBlockContrib()"></select>
+        </div>
+        <div class="tableWrap" style="margin-top:10px;"><table id="dataTable"></table></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <div class="title"><h2>检验结果</h2></div>
+        <div class="kpis">
+          <div class="kpi"><div class="k">平稳性检验</div><div class="v" id="stationarityStatus">--</div></div>
+          <div class="kpi"><div class="k">协整检验</div><div class="v" id="cointegrationStatus">--</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>弹性估计结果</h2></div>
+        <div class="kpis" id="betaGrid"></div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>J1贡献概览</h2></div>
+        <div class="kpis">
+          <div class="kpi"><div class="k">平均科研贡献</div><div class="v" id="avgTFP">--</div></div>
+          <div class="kpi"><div class="k">科研贡献范围</div><div class="v" id="rangeTFP">--</div></div>
+          <div class="kpi"><div class="k">最小值</div><div class="v" id="minTFP">--</div></div>
+          <div class="kpi"><div class="k">最大值</div><div class="v" id="maxTFP">--</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>各期贡献率</h2></div>
+        <div class="tableWrap"><table id="contribTable"></table></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_ROWS = [{"block": "J1井区", "year": 2019, "oil_output": 32.0, "operating_cost": 108000.0, "profit": 64000.0, "net_profit": 55000.0, "labor": 18, "recoverable_reserve": 690.0, "rd_total": 252.0, "invest_total": 2400.0, "capital_stock": 12000.0}, {"block": "J1井区", "year": 2020, "oil_output": 36.0, "operating_cost": 118000.0, "profit": 70000.0, "net_profit": 60200.0, "labor": 19, "recoverable_reserve": 720.0, "rd_total": 247.2, "invest_total": 2331.02, "capital_stock": 14056.4}, {"block": "J1井区", "year": 2021, "oil_output": 42.0, "operating_cost": 127000.0, "profit": 76000.0, "net_profit": 65500.0, "labor": 20, "recoverable_reserve": 750.0, "rd_total": 339.14, "invest_total": 3166.58, "capital_stock": 17258.11}, {"block": "J1井区", "year": 2022, "oil_output": 50.0, "operating_cost": 136000.0, "profit": 50000.0, "net_profit": 44000.0, "labor": 21, "recoverable_reserve": 780.0, "rd_total": 453.41, "invest_total": 4192.38, "capital_stock": 21742.78}, {"block": "J1井区", "year": 2023, "oil_output": 63.0, "operating_cost": 147000.0, "profit": 67000.0, "net_profit": 57000.0, "labor": 22, "recoverable_reserve": 815.0, "rd_total": 719.86, "invest_total": 6592.09, "capital_stock": 29775.16}, {"block": "J1井区", "year": 2024, "oil_output": 95.0, "operating_cost": 203000.0, "profit": 110000.0, "net_profit": 93000.0, "labor": 23, "recoverable_reserve": 860.0, "rd_total": 1768.24, "invest_total": 16038.45, "capital_stock": 53522.32}, {"block": "J1井区", "year": 2025, "oil_output": 151.0, "operating_cost": 300000.0, "profit": 125000.0, "net_profit": 106000.0, "labor": 24, "recoverable_reserve": 920.0, "rd_total": 3733.89, "invest_total": 33548.0, "capital_stock": 104787.36}, {"block": "区块02", "year": 2019, "oil_output": 37.4342, "operating_cost": 128985.36, "profit": 57692.43, "net_profit": 48461.64, "labor": 15, "recoverable_reserve": 805.0, "rd_total": 304.52, "invest_total": 2985.48, "capital_stock": 16585.98}, {"block": "区块02", "year": 2020, "oil_output": 43.8382, "operating_cost": 143963.99, "profit": 62691.28, "net_profit": 52660.68, "labor": 16, "recoverable_reserve": 888.15, "rd_total": 381.73, "invest_total": 3712.71, "capital_stock": 20536.19}, {"block": "区块02", "year": 2021, "oil_output": 50.9078, "operating_cost": 158022.22, "profit": 66092.6, "net_profit": 55517.78, "labor": 17, "recoverable_reserve": 939.26, "rd_total": 443.66, "invest_total": 4281.15, "capital_stock": 24819.9}, {"block": "区块02", "year": 2022, "oil_output": 55.6658, "operating_cost": 166393.63, "profit": 66831.05, "net_profit": 56138.08, "labor": 18, "recoverable_reserve": 983.38, "rd_total": 387.44, "invest_total": 3709.43, "capital_stock": 27180.36}, {"block": "区块02", "year": 2023, "oil_output": 66.8511, "operating_cost": 194363.55, "profit": 76083.99, "net_profit": 63910.55, "labor": 19, "recoverable_reserve": 1068.56, "rd_total": 699.19, "invest_total": 6642.21, "capital_stock": 34726.86}, {"block": "区块02", "year": 2024, "oil_output": 72.1344, "operating_cost": 202848.4, "profit": 79360.84, "net_profit": 66663.11, "labor": 20, "recoverable_reserve": 1116.2, "rd_total": 543.44, "invest_total": 5122.9, "capital_stock": 37900.34}, {"block": "区块02", "year": 2025, "oil_output": 80.8035, "operating_cost": 214341.76, "profit": 85964.33, "net_profit": 72210.04, "labor": 21, "recoverable_reserve": 1211.75, "rd_total": 710.58, "invest_total": 6647.4, "capital_stock": 43395.26}, {"block": "区块03", "year": 2019, "oil_output": 31.8926, "operating_cost": 127409.74, "profit": 54051.49, "net_profit": 45403.26, "labor": 15, "recoverable_reserve": 732.0, "rd_total": 170.73, "invest_total": 1673.86, "capital_stock": 9299.22}, {"block": "区块03", "year": 2020, "oil_output": 37.6981, "operating_cost": 145880.18, "profit": 59333.02, "net_profit": 49839.74, "labor": 16, "recoverable_reserve": 790.5, "rd_total": 218.92, "invest_total": 2129.23, "capital_stock": 11605.57}, {"block": "区块03", "year": 2021, "oil_output": 42.4876, "operating_cost": 156358.3, "profit": 61582.14, "net_profit": 51729.0, "labor": 17, "recoverable_reserve": 863.44, "rd_total": 218.49, "invest_total": 2108.32, "capital_stock": 13428.2}, {"block": "区块03", "year": 2022, "oil_output": 46.0732, "operating_cost": 166197.01, "profit": 64835.96, "net_profit": 54462.2, "labor": 18, "recoverable_reserve": 898.48, "rd_total": 201.99, "invest_total": 1933.86, "capital_stock": 14564.81}, {"block": "区块03", "year": 2023, "oil_output": 52.4188, "operating_cost": 180038.5, "profit": 71442.35, "net_profit": 60011.57, "labor": 19, "recoverable_reserve": 972.69, "rd_total": 289.79, "invest_total": 2752.98, "capital_stock": 17058.08}, {"block": "区块03", "year": 2024, "oil_output": 59.3682, "operating_cost": 195242.85, "profit": 80365.38, "net_profit": 67506.92, "labor": 20, "recoverable_reserve": 1010.39, "rd_total": 344.31, "invest_total": 3245.78, "capital_stock": 20019.57}, {"block": "区块03", "year": 2025, "oil_output": 67.808, "operating_cost": 214752.73, "profit": 92203.28, "net_profit": 77450.75, "labor": 21, "recoverable_reserve": 1088.46, "rd_total": 426.91, "invest_total": 3993.67, "capital_stock": 23849.79}, {"block": "区块04", "year": 2019, "oil_output": 30.2132, "operating_cost": 104228.51, "profit": 41409.56, "net_profit": 34784.03, "labor": 19, "recoverable_reserve": 627.0, "rd_total": 186.28, "invest_total": 1826.25, "capital_stock": 10145.85}, {"block": "区块04", "year": 2020, "oil_output": 33.4, "operating_cost": 113743.57, "profit": 44381.52, "net_profit": 37280.48, "labor": 20, "recoverable_reserve": 656.76, "rd_total": 185.07, "invest_total": 1800.0, "capital_stock": 11529.39}, {"block": "区块04", "year": 2021, "oil_output": 38.6152, "operating_cost": 125191.23, "profit": 49262.29, "net_profit": 41380.33, "labor": 21, "recoverable_reserve": 703.67, "rd_total": 251.7, "invest_total": 2428.75, "capital_stock": 13982.87}, {"block": "区块04", "year": 2022, "oil_output": 42.1109, "operating_cost": 135012.36, "profit": 54823.38, "net_profit": 46051.64, "labor": 22, "recoverable_reserve": 733.63, "rd_total": 221.99, "invest_total": 2125.38, "capital_stock": 15381.13}, {"block": "区块04", "year": 2023, "oil_output": 46.2644, "operating_cost": 143219.86, "profit": 60653.11, "net_profit": 50948.61, "labor": 23, "recoverable_reserve": 764.55, "rd_total": 255.95, "invest_total": 2431.53, "capital_stock": 17099.24}, {"block": "区块04", "year": 2024, "oil_output": 53.0592, "operating_cost": 160186.85, "profit": 70435.7, "net_profit": 59165.99, "labor": 24, "recoverable_reserve": 809.13, "rd_total": 375.51, "invest_total": 3539.87, "capital_stock": 20618.37}, {"block": "区块04", "year": 2025, "oil_output": 62.8789, "operating_cost": 179118.71, "profit": 80431.04, "net_profit": 67562.07, "labor": 25, "recoverable_reserve": 840.69, "rd_total": 523.23, "invest_total": 4894.73, "capital_stock": 26066.24}, {"block": "区块05", "year": 2019, "oil_output": 37.9223, "operating_cost": 101107.62, "profit": 39556.56, "net_profit": 33227.51, "labor": 18, "recoverable_reserve": 683.0, "rd_total": 289.86, "invest_total": 2841.75, "capital_stock": 15787.51}, {"block": "区块05", "year": 2020, "oil_output": 44.7124, "operating_cost": 117457.7, "profit": 47107.82, "net_profit": 39570.57, "labor": 19, "recoverable_reserve": 717.34, "rd_total": 384.26, "invest_total": 3737.36, "capital_stock": 19938.68}, {"block": "区块05", "year": 2021, "oil_output": 49.469, "operating_cost": 124987.35, "profit": 52183.14, "net_profit": 43833.83, "labor": 20, "recoverable_reserve": 755.19, "rd_total": 331.63, "invest_total": 3200.05, "capital_stock": 22258.25}, {"block": "区块05", "year": 2022, "oil_output": 57.1346, "operating_cost": 139864.33, "profit": 60816.29, "net_profit": 51085.68, "labor": 21, "recoverable_reserve": 818.38, "rd_total": 480.55, "invest_total": 4600.83, "capital_stock": 26825.56}, {"block": "区块05", "year": 2023, "oil_output": 61.8522, "operating_cost": 146821.88, "profit": 65623.69, "net_profit": 55123.9, "labor": 22, "recoverable_reserve": 848.31, "rd_total": 415.96, "invest_total": 3951.63, "capital_stock": 29266.1}, {"block": "区块05", "year": 2024, "oil_output": 70.2543, "operating_cost": 164255.55, "profit": 73862.56, "net_profit": 62044.55, "labor": 23, "recoverable_reserve": 883.03, "rd_total": 628.64, "invest_total": 5926.11, "capital_stock": 35034.36}, {"block": "区块05", "year": 2025, "oil_output": 80.3293, "operating_cost": 182745.2, "profit": 80779.21, "net_profit": 67854.54, "labor": 25, "recoverable_reserve": 947.7, "rd_total": 759.63, "invest_total": 7106.26, "capital_stock": 41962.86}, {"block": "区块06", "year": 2019, "oil_output": 22.0682, "operating_cost": 74261.73, "profit": 30567.43, "net_profit": 25676.64, "labor": 16, "recoverable_reserve": 850.0, "rd_total": 290.59, "invest_total": 2848.92, "capital_stock": 15827.35}, {"block": "区块06", "year": 2020, "oil_output": 25.3391, "operating_cost": 80552.96, "profit": 34585.11, "net_profit": 29051.49, "labor": 17, "recoverable_reserve": 906.5, "rd_total": 326.78, "invest_total": 3178.27, "capital_stock": 18895.68}, {"block": "区块06", "year": 2021, "oil_output": 28.4269, "operating_cost": 87170.48, "profit": 38687.13, "net_profit": 32497.19, "labor": 18, "recoverable_reserve": 956.04, "rd_total": 366.08, "invest_total": 3532.52, "capital_stock": 22055.2}, {"block": "区块06", "year": 2022, "oil_output": 32.3912, "operating_cost": 97651.54, "profit": 43938.92, "net_profit": 36908.7, "labor": 19, "recoverable_reserve": 1048.93, "rd_total": 458.29, "invest_total": 4387.75, "capital_stock": 26251.8}, {"block": "区块06", "year": 2023, "oil_output": 37.7894, "operating_cost": 109133.84, "profit": 48634.18, "net_profit": 40852.71, "labor": 20, "recoverable_reserve": 1102.37, "rd_total": 600.79, "invest_total": 5707.48, "capital_stock": 32179.31}, {"block": "区块06", "year": 2024, "oil_output": 41.1957, "operating_cost": 116439.33, "profit": 50344.12, "net_profit": 42289.06, "labor": 21, "recoverable_reserve": 1211.16, "rd_total": 501.47, "invest_total": 4727.25, "capital_stock": 35081.84}, {"block": "区块06", "year": 2025, "oil_output": 46.5047, "operating_cost": 124982.84, "profit": 51839.16, "net_profit": 43544.89, "labor": 22, "recoverable_reserve": 1322.69, "rd_total": 654.44, "invest_total": 6122.23, "capital_stock": 40108.86}, {"block": "区块07", "year": 2019, "oil_output": 43.4011, "operating_cost": 143517.78, "profit": 63106.15, "net_profit": 53009.16, "labor": 20, "recoverable_reserve": 689.0, "rd_total": 193.88, "invest_total": 1900.74, "capital_stock": 10559.65}, {"block": "区块07", "year": 2020, "oil_output": 51.9096, "operating_cost": 166288.48, "profit": 74669.78, "net_profit": 62722.62, "labor": 21, "recoverable_reserve": 712.22, "rd_total": 267.98, "invest_total": 2606.42, "capital_stock": 13541.3}, {"block": "区块07", "year": 2021, "oil_output": 59.2586, "operating_cost": 179730.52, "profit": 80559.16, "net_profit": 67669.69, "labor": 22, "recoverable_reserve": 781.13, "rd_total": 274.0, "invest_total": 2643.99, "capital_stock": 16021.8}, {"block": "区块07", "year": 2022, "oil_output": 65.2993, "operating_cost": 192451.8, "profit": 84206.81, "net_profit": 70733.72, "labor": 24, "recoverable_reserve": 843.08, "rd_total": 255.08, "invest_total": 2442.18, "capital_stock": 17637.18}, {"block": "区块07", "year": 2023, "oil_output": 72.0433, "operating_cost": 207697.59, "profit": 87387.36, "net_profit": 73405.38, "labor": 25, "recoverable_reserve": 927.63, "rd_total": 288.12, "invest_total": 2737.09, "capital_stock": 19509.04}, {"block": "区块07", "year": 2024, "oil_output": 84.3581, "operating_cost": 233671.85, "profit": 94328.5, "net_profit": 79235.94, "labor": 26, "recoverable_reserve": 967.95, "rd_total": 483.45, "invest_total": 4557.43, "capital_stock": 24521.58}, {"block": "区块07", "year": 2025, "oil_output": 95.736, "operating_cost": 250097.17, "profit": 98117.31, "net_profit": 82418.54, "labor": 27, "recoverable_reserve": 1053.21, "rd_total": 506.85, "invest_total": 4741.54, "capital_stock": 28924.23}, {"block": "区块08", "year": 2019, "oil_output": 36.9415, "operating_cost": 143883.9, "profit": 64701.82, "net_profit": 54349.53, "labor": 22, "recoverable_reserve": 623.0, "rd_total": 171.08, "invest_total": 1677.28, "capital_stock": 9318.22}, {"block": "区块08", "year": 2020, "oil_output": 42.1783, "operating_cost": 157097.04, "profit": 69441.91, "net_profit": 58331.2, "labor": 23, "recoverable_reserve": 665.13, "rd_total": 193.34, "invest_total": 1880.42, "capital_stock": 11142.44}, {"block": "区块08", "year": 2021, "oil_output": 46.2836, "operating_cost": 164481.26, "profit": 70181.97, "net_profit": 58952.85, "labor": 25, "recoverable_reserve": 720.59, "rd_total": 186.54, "invest_total": 1800.0, "capital_stock": 12342.41}, {"block": "区块08", "year": 2022, "oil_output": 52.7701, "operating_cost": 182893.89, "profit": 74804.63, "net_profit": 62835.89, "labor": 27, "recoverable_reserve": 763.49, "rd_total": 247.64, "invest_total": 2370.92, "capital_stock": 14528.33}, {"block": "区块08", "year": 2023, "oil_output": 57.4419, "operating_cost": 188198.28, "profit": 74369.41, "net_profit": 62470.31, "labor": 29, "recoverable_reserve": 802.67, "rd_total": 222.81, "invest_total": 2116.7, "capital_stock": 15805.01}, {"block": "区块08", "year": 2024, "oil_output": 65.0732, "operating_cost": 209603.43, "profit": 81745.4, "net_profit": 68666.13, "labor": 31, "recoverable_reserve": 833.27, "rd_total": 310.02, "invest_total": 2922.49, "capital_stock": 18385.76}, {"block": "区块08", "year": 2025, "oil_output": 74.5503, "operating_cost": 228368.69, "profit": 90277.6, "net_profit": 75833.19, "labor": 33, "recoverable_reserve": 916.6, "rd_total": 373.21, "invest_total": 3491.33, "capital_stock": 21564.13}, {"block": "区块09", "year": 2019, "oil_output": 39.9204, "operating_cost": 168112.17, "profit": 72685.58, "net_profit": 61055.88, "labor": 21, "recoverable_reserve": 624.0, "rd_total": 299.16, "invest_total": 2932.97, "capital_stock": 16294.29}, {"block": "区块09", "year": 2020, "oil_output": 47.1733, "operating_cost": 190808.6, "profit": 79141.72, "net_profit": 66479.05, "labor": 22, "recoverable_reserve": 667.34, "rd_total": 390.09, "invest_total": 3794.09, "capital_stock": 20457.1}, {"block": "区块09", "year": 2021, "oil_output": 54.6644, "operating_cost": 214296.67, "profit": 85505.18, "net_profit": 71824.35, "labor": 23, "recoverable_reserve": 705.92, "rd_total": 443.78, "invest_total": 4282.3, "capital_stock": 24758.24}, {"block": "区块09", "year": 2022, "oil_output": 63.7585, "operating_cost": 244549.62, "profit": 95514.21, "net_profit": 80231.94, "labor": 24, "recoverable_reserve": 740.14, "rd_total": 567.56, "invest_total": 5433.87, "capital_stock": 30446.8}, {"block": "区块09", "year": 2023, "oil_output": 70.0847, "operating_cost": 258345.6, "profit": 101380.02, "net_profit": 85159.22, "labor": 25, "recoverable_reserve": 766.25, "rd_total": 504.72, "invest_total": 4794.84, "capital_stock": 33812.49}, {"block": "区块09", "year": 2024, "oil_output": 76.7007, "operating_cost": 267322.67, "profit": 107972.38, "net_profit": 90696.8, "labor": 26, "recoverable_reserve": 797.58, "rd_total": 571.69, "invest_total": 5389.24, "capital_stock": 37674.02}, {"block": "区块09", "year": 2025, "oil_output": 82.568, "operating_cost": 284607.02, "profit": 119822.03, "net_profit": 100650.51, "labor": 27, "recoverable_reserve": 828.54, "rd_total": 598.6, "invest_total": 5599.83, "capital_stock": 41197.93}, {"block": "区块10", "year": 2019, "oil_output": 29.8408, "operating_cost": 94858.15, "profit": 38292.28, "net_profit": 32165.51, "labor": 21, "recoverable_reserve": 632.0, "rd_total": 271.86, "invest_total": 2665.29, "capital_stock": 14807.15}, {"block": "区块10", "year": 2020, "oil_output": 34.9402, "operating_cost": 105256.06, "profit": 41293.72, "net_profit": 34686.72, "labor": 22, "recoverable_reserve": 674.66, "rd_total": 351.69, "invest_total": 3420.56, "capital_stock": 18537.62}, {"block": "区块10", "year": 2021, "oil_output": 39.8227, "operating_cost": 117298.92, "profit": 45819.85, "net_profit": 38488.68, "labor": 23, "recoverable_reserve": 706.82, "rd_total": 385.67, "invest_total": 3721.54, "capital_stock": 22129.5}, {"block": "区块10", "year": 2022, "oil_output": 43.6959, "operating_cost": 124133.05, "profit": 49553.2, "net_profit": 41624.69, "labor": 24, "recoverable_reserve": 747.65, "rd_total": 353.94, "invest_total": 3388.7, "capital_stock": 24390.56}, {"block": "区块10", "year": 2023, "oil_output": 51.7807, "operating_cost": 144917.11, "profit": 60145.22, "net_profit": 50521.99, "labor": 25, "recoverable_reserve": 821.94, "rd_total": 590.95, "invest_total": 5614.02, "capital_stock": 30496.25}, {"block": "区块10", "year": 2024, "oil_output": 60.3646, "operating_cost": 160866.19, "profit": 69591.52, "net_profit": 58456.88, "labor": 27, "recoverable_reserve": 895.89, "rd_total": 673.93, "invest_total": 6353.01, "capital_stock": 36848.9}, {"block": "区块10", "year": 2025, "oil_output": 71.0155, "operating_cost": 182610.77, "profit": 81403.29, "net_profit": 68378.76, "labor": 28, "recoverable_reserve": 958.47, "rd_total": 912.75, "invest_total": 8538.65, "capital_stock": 46183.06}, {"block": "区块11", "year": 2019, "oil_output": 23.4942, "operating_cost": 72888.66, "profit": 28426.6, "net_profit": 23878.34, "labor": 21, "recoverable_reserve": 712.0, "rd_total": 195.8, "invest_total": 1919.63, "capital_stock": 10664.63}, {"block": "区块11", "year": 2020, "oil_output": 26.2685, "operating_cost": 79751.96, "profit": 31527.16, "net_profit": 26482.81, "labor": 22, "recoverable_reserve": 755.41, "rd_total": 196.96, "invest_total": 1915.64, "capital_stock": 12297.67}, {"block": "区块11", "year": 2021, "oil_output": 29.4605, "operating_cost": 85568.28, "profit": 35019.08, "net_profit": 29416.03, "labor": 23, "recoverable_reserve": 799.37, "rd_total": 219.8, "invest_total": 2120.96, "capital_stock": 14011.51}, {"block": "区块11", "year": 2022, "oil_output": 33.8881, "operating_cost": 95862.04, "profit": 40927.85, "net_profit": 34379.39, "labor": 25, "recoverable_reserve": 851.91, "rd_total": 288.29, "invest_total": 2760.13, "capital_stock": 16624.92}, {"block": "区块11", "year": 2023, "oil_output": 39.1412, "operating_cost": 106738.92, "profit": 47201.16, "net_profit": 39648.97, "labor": 27, "recoverable_reserve": 928.71, "rd_total": 362.78, "invest_total": 3446.35, "capital_stock": 20055.41}, {"block": "区块11", "year": 2024, "oil_output": 45.8993, "operating_cost": 119691.75, "profit": 53827.56, "net_profit": 45215.15, "labor": 29, "recoverable_reserve": 970.65, "rd_total": 493.72, "invest_total": 4654.25, "capital_stock": 25149.08}, {"block": "区块11", "year": 2025, "oil_output": 50.4, "operating_cost": 125483.57, "profit": 56071.55, "net_profit": 47100.1, "labor": 31, "recoverable_reserve": 1006.89, "rd_total": 407.17, "invest_total": 3809.05, "capital_stock": 27637.82}];
+
+const BASE_FIELDS = {
+  block:{label:'区块',input:'text'},
+  year:{label:'年份',input:'number',step:'1'},
+  oil_output:{label:'原油产量',input:'number',step:'any'}
+};
+
+const PRESET_FIELDS = {
+  explore_staff:{label:'勘探人员投入',input:'number',step:'1',transform:'level',prior:0.10},
+  labor:{label:'投入人员数',input:'number',step:'1',transform:'level',prior:0.10},
+  research_staff:{label:'科研人员投入',input:'number',step:'1',transform:'level',prior:0.10},
+  total_staff:{label:'开发人员投入',input:'number',step:'1',transform:'level',prior:0.10},
+  new_proved_reserve:{label:'当年新增原油探明储量',input:'number',step:'any',transform:'level',prior:0.12},
+  recoverable_reserve:{label:'原油可采储量',input:'number',step:'any',transform:'level',prior:0.12},
+  explore_rd:{label:'勘探阶段科研投资',input:'number',step:'any',transform:'level',prior:0.08},
+  develop_rd:{label:'开发阶段科研投资',input:'number',step:'any',transform:'level',prior:0.08},
+  rd_total:{label:'科研总投资',input:'number',step:'any',transform:'level',prior:0.08},
+  paper_count:{label:'论文数',input:'number',step:'1',transform:'level',prior:0.08},
+  patent_count:{label:'专利数',input:'number',step:'1',transform:'level',prior:0.08},
+  unit_oil_cost:{label:'单位油气成本',input:'number',step:'any',transform:'efficiency',prior:0.08},
+  operation_cost:{label:'操作成本',input:'number',step:'any',transform:'efficiency',prior:0.08},
+  production_cost:{label:'生产成本',input:'number',step:'any',transform:'efficiency',prior:0.08},
+  period_expense:{label:'期间费用',input:'number',step:'any',transform:'efficiency',prior:0.08},
+  operating_cost:{label:'营运成本',input:'number',step:'any',transform:'efficiency',prior:0.08},
+  explore_invest:{label:'勘探投资额',input:'number',step:'any',transform:'level',prior:0.58},
+  develop_invest:{label:'开发投资额',input:'number',step:'any',transform:'level',prior:0.58},
+  active_wells:{label:'年末在产井数',input:'number',step:'1',transform:'level',prior:0.58},
+  input_equip:{label:'投入设备价值',input:'number',step:'any',transform:'level',prior:0.58},
+  capital_stock:{label:'勘探开发投资额',input:'number',step:'any',transform:'level',prior:0.58}
+};
+
+const DEFAULT_DIMENSIONS = [
+  {name:'劳动维度', indicators:[
+    {fieldKey:'explore_staff',label:'勘探人员投入',isCustom:false,selected:false},
+    {fieldKey:'labor',label:'投入人员数',isCustom:false,selected:true},
+    {fieldKey:'research_staff',label:'科研人员投入',isCustom:false,selected:false},
+    {fieldKey:'total_staff',label:'开发人员投入',isCustom:false,selected:false}
+  ]},
+  {name:'自然资源维度', indicators:[
+    {fieldKey:'new_proved_reserve',label:'当年新增原油探明储量',isCustom:false,selected:false},
+    {fieldKey:'recoverable_reserve',label:'原油可采储量',isCustom:false,selected:true}
+  ]},
+  {name:'管理维度', indicators:[
+    {fieldKey:'unit_oil_cost',label:'单位油气成本',isCustom:false,selected:false},
+    {fieldKey:'operation_cost',label:'操作成本',isCustom:false,selected:false},
+    {fieldKey:'production_cost',label:'生产成本',isCustom:false,selected:false},
+    {fieldKey:'period_expense',label:'期间费用',isCustom:false,selected:false},
+    {fieldKey:'operating_cost',label:'营运成本',isCustom:false,selected:true}
+  ]},
+  {name:'资本维度', indicators:[
+    {fieldKey:'explore_invest',label:'勘探投资额',isCustom:false,selected:false},
+    {fieldKey:'develop_invest',label:'开发投资额',isCustom:false,selected:false},
+    {fieldKey:'active_wells',label:'年末在产井数',isCustom:false,selected:false},
+    {fieldKey:'input_equip',label:'投入设备价值',isCustom:false,selected:false},
+    {fieldKey:'capital_stock',label:'勘探开发投资额',isCustom:false,selected:true}
+  ]}
+];
+
+let rows = [];
+let dimensions = [];
+let betas = {};
+let blockContrib = {};
+let dimensionSeq = 1;
+let indicatorSeq = 1;
+let customSeq = 1;
+
+function fmt(x,d=4){ return Number.isFinite(x) ? Number(x).toFixed(d) : '--'; }
+function fmt2(x,d=2){ return Number.isFinite(x) ? Number(x).toFixed(d) : '--'; }
+function pct(x,d=2){ return Number.isFinite(x) ? Number(x).toFixed(d)+'%' : '--'; }
+function num(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+function roundN(v,d=2){ return Number(v.toFixed(d)); }
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+function nextDimensionId(){ return 'dim_' + (dimensionSeq++); }
+function nextIndicatorId(){ return 'ind_' + (indicatorSeq++); }
+function nextCustomFieldKey(){ return 'custom_field_' + (customSeq++); }
+function createCustomIndicator(selected=false){
+  const fieldKey = nextCustomFieldKey();
+  const m = /(\d+)$/.exec(fieldKey);
+  const labelNum = m ? m[1] : '';
+  ensureRowsHaveCustomField(fieldKey);
+  return {id: nextIndicatorId(), fieldKey, label: '自定义指标' + labelNum, isCustom:true, selected};
+}
+
+function enrichRow(r){
+  const out = {...r};
+  if(out.explore_staff == null) out.explore_staff = Math.max(1, Math.round(num(out.labor || 1) * 0.45));
+  if(out.research_staff == null) out.research_staff = Math.max(1, Math.round(num(out.labor || 1) * 0.35));
+  if(out.total_staff == null) out.total_staff = num(out.explore_staff) + num(out.labor) + num(out.research_staff);
+  if(out.new_proved_reserve == null) out.new_proved_reserve = roundN(num(out.recoverable_reserve) * 0.10, 2);
+  if(out.explore_rd == null) out.explore_rd = roundN(num(out.rd_total) * 0.44, 2);
+  if(out.develop_rd == null) out.develop_rd = roundN(num(out.rd_total) - num(out.explore_rd), 2);
+  if(out.paper_count == null) out.paper_count = Math.max(1, Math.round((num(out.year) - 2018) / 2 + (out.block === 'J1井区' ? 1 : 0)));
+  if(out.patent_count == null) out.patent_count = Math.max(1, Math.round((num(out.year) - 2018) / 3));
+  if(out.unit_oil_cost == null) out.unit_oil_cost = roundN(num(out.operating_cost) / Math.max(num(out.oil_output), 1e-8), 2);
+  if(out.operation_cost == null) out.operation_cost = roundN(num(out.operating_cost) * 0.16, 2);
+  if(out.production_cost == null) out.production_cost = roundN(num(out.operating_cost) * 0.74, 2);
+  if(out.period_expense == null) out.period_expense = roundN(num(out.operating_cost) * 0.10, 2);
+  if(out.explore_invest == null) out.explore_invest = roundN(num(out.invest_total) * 0.42, 2);
+  if(out.develop_invest == null) out.develop_invest = roundN(num(out.invest_total) - num(out.explore_invest), 2);
+  if(out.active_wells == null) out.active_wells = Math.max(1, Math.round(num(out.labor)));
+  if(out.input_equip == null) out.input_equip = roundN(num(out.invest_total) * 0.30, 2);
+  dimensions.forEach(dim=>{
+    dim.indicators.forEach(ind=>{
+      if(out[ind.fieldKey] == null) out[ind.fieldKey] = 0;
+    });
+  });
+  return out;
+}
+
+function hydrateRows(arr){ return arr.map(enrichRow); }
+
+function normalizeDimensions(raw){
+  return raw.map(dim=>{
+    const obj = {id: nextDimensionId(), name: dim.name || '自定义维度', indicators: []};
+    obj.indicators = (dim.indicators || []).map(ind=>({
+      id: nextIndicatorId(),
+      fieldKey: ind.fieldKey,
+      label: ind.label || (PRESET_FIELDS[ind.fieldKey] ? PRESET_FIELDS[ind.fieldKey].label : '自定义指标'),
+      isCustom: !!ind.isCustom,
+      selected: !!ind.selected
+    }));
+    if(!obj.indicators.some(ind=>ind.selected) && obj.indicators.length){ obj.indicators[0].selected = true; }
+    obj.indicators.forEach(ind=>{
+      if(ind.isCustom){
+        const m = /custom_field_(\d+)/.exec(ind.fieldKey || '');
+        if(m) customSeq = Math.max(customSeq, Number(m[1]) + 1);
+      }
+    });
+    return obj;
+  });
+}
+
+function selectedIndicator(dim){
+  return dim.indicators.find(ind=>ind.selected) || dim.indicators[0] || null;
+}
+
+function presetOptions(current){
+  return Object.entries(PRESET_FIELDS).map(([key, meta])=>`<option value="${key}" ${current===key?'selected':''}>${meta.label}</option>`).join('');
+}
+
+function ensureRowsHaveCustomField(fieldKey){
+  rows = rows.map(r => ({...r, [fieldKey]: r[fieldKey] == null ? 0 : r[fieldKey]}));
+}
+
+function renderDimensionEditor(){
+  const wrap = document.getElementById('dimensionEditor');
+  if(!dimensions.length){
+    wrap.innerHTML = '<div class="emptyState">暂无维度。</div>';
+    return;
+  }
+  wrap.innerHTML = dimensions.map(dim=>{
+    const selected = selectedIndicator(dim);
+    return `<div class="dimensionBox">
+      <div class="dimensionHead">
+        <input class="dimensionName" type="text" value="${escapeHtml(dim.name)}" onchange="updateDimensionName('${dim.id}', this.value)">
+        <div class="dimensionTools">
+          <button class="light" onclick="addIndicator('${dim.id}')">新增指标</button>
+          <button class="danger" onclick="removeDimension('${dim.id}')">删除维度</button>
+        </div>
+      </div>
+      <div class="indicatorList">
+        ${dim.indicators.map(ind=>`
+          <div class="indicatorRow">
+            <div class="indicatorMain">
+              <div class="radioWrap"><input type="radio" name="sel_${dim.id}" ${ind.selected ? 'checked' : ''} onchange="selectIndicator('${dim.id}','${ind.id}')"></div>
+              <div>
+                <input class="indicatorLabel" type="text" value="${escapeHtml(ind.label)}" onchange="updateIndicatorLabel('${dim.id}','${ind.id}', this.value)">
+              </div>
+              <details class="fieldDetails">
+                <summary>字段</summary>
+                <div class="fieldConfig">
+                  <select class="miniSelect" onchange="changeIndicatorField('${dim.id}','${ind.id}', this.value)">
+                    <option value="__custom__" ${ind.isCustom ? 'selected' : ''}>自定义指标</option>
+                    ${presetOptions(ind.isCustom ? '' : ind.fieldKey)}
+                  </select>
+                </div>
+              </details>
+              <button class="danger smallBtn" onclick="removeIndicator('${dim.id}','${ind.id}')">删除</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function addDimension(){
+  dimensions.push({
+    id: nextDimensionId(),
+    name: '自定义维度' + dimensions.length,
+    indicators: [createCustomIndicator(true)]
+  });
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function removeDimension(dimId){
+  if(dimensions.length <= 1){ alert('至少保留一个维度。'); return; }
+  dimensions = dimensions.filter(dim => dim.id !== dimId);
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function resetDimensions(){
+  dimensions = normalizeDimensions(clone(DEFAULT_DIMENSIONS));
+  rows = hydrateRows(clone(DEFAULT_ROWS));
+  renderBlockSel();
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function addIndicator(dimId){
+  const dim = dimensions.find(d=>d.id===dimId);
+  if(!dim) return;
+  dim.indicators.push(createCustomIndicator(dim.indicators.length===0));
+  if(!dim.indicators.some(ind=>ind.selected)){ dim.indicators[0].selected = true; }
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function removeIndicator(dimId, indId){
+  const dim = dimensions.find(d=>d.id===dimId);
+  if(!dim) return;
+  if(dim.indicators.length <= 1){ alert('每个维度至少保留一个指标。'); return; }
+  const removed = dim.indicators.find(ind=>ind.id===indId);
+  dim.indicators = dim.indicators.filter(ind=>ind.id!==indId);
+  if(!dim.indicators.some(ind=>ind.selected)){ dim.indicators[0].selected = true; }
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function selectIndicator(dimId, indId){
+  const dim = dimensions.find(d=>d.id===dimId);
+  if(!dim) return;
+  dim.indicators.forEach(ind=>{ ind.selected = ind.id === indId; });
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function updateDimensionName(dimId, value){
+  const dim = dimensions.find(d=>d.id===dimId);
+  if(!dim) return;
+  dim.name = String(value).trim() || '自定义维度';
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function updateIndicatorLabel(dimId, indId, value){
+  const dim = dimensions.find(d=>d.id===dimId);
+  const ind = dim?.indicators.find(i=>i.id===indId);
+  if(!ind) return;
+  ind.label = String(value).trim() || (ind.isCustom ? '自定义指标' : (PRESET_FIELDS[ind.fieldKey]?.label || '指标'));
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function hasPresetFieldConflict(fieldKey, currentIndId){
+  return dimensions.some(dim=>dim.indicators.some(ind=>!ind.isCustom && ind.id!==currentIndId && ind.fieldKey===fieldKey));
+}
+
+function changeIndicatorField(dimId, indId, value){
+  const dim = dimensions.find(d=>d.id===dimId);
+  const ind = dim?.indicators.find(i=>i.id===indId);
+  if(!ind) return;
+  if(value === '__custom__'){
+    if(!ind.isCustom){
+      const newIndicator = createCustomIndicator(ind.selected);
+      ind.fieldKey = newIndicator.fieldKey;
+      ind.isCustom = true;
+      ind.label = newIndicator.label;
+    }
+  }else{
+    if(hasPresetFieldConflict(value, ind.id)){
+      alert('同一个预设指标只能在一个位置使用一次。');
+      renderDimensionEditor();
+      return;
+    }
+    ind.fieldKey = value;
+    ind.isCustom = false;
+    ind.label = PRESET_FIELDS[value].label;
+  }
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function allIndicatorColumns(){
+  const cols = [];
+  dimensions.forEach(dim=>{
+    dim.indicators.forEach(ind=>{
+      if(!cols.includes(ind.fieldKey)) cols.push(ind.fieldKey);
+    });
+  });
+  return cols;
+}
+
+function uniqueBlocks(){
+  return Array.from(new Set(rows.map(r=>r.block))).sort((a,b)=>String(a).localeCompare(String(b),'zh-CN'));
+}
+
+function renderBlockSel(){
+  const sel = document.getElementById('blockSel');
+  const current = sel.value;
+  const blocks = uniqueBlocks();
+  sel.innerHTML = blocks.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+  sel.value = blocks.includes(current) ? current : (blocks.includes('J1井区') ? 'J1井区' : (blocks[0] || ''));
+}
+
+function renderDataTable(){
+  const baseCols = ['block','year','oil_output'];
+  const activeDims = dimensions.map(dim=>({id:dim.id,name:dim.name,indicator:selectedIndicator(dim)})).filter(dim=>dim.indicator);
+  let h = '<thead><tr>';
+  h += `<th class="groupHead" colspan="${baseCols.length}">基础信息</th>`;
+  activeDims.forEach(dim=>{ h += `<th class="groupHead" colspan="1">${escapeHtml(dim.name)}</th>`; });
+  h += '</tr><tr>';
+  baseCols.forEach(key=>{ h += `<th class="subHead">${BASE_FIELDS[key].label}</th>`; });
+  activeDims.forEach(dim=>{
+    h += `<th class="subHead">${escapeHtml(dim.indicator.label)}<span class="usedMark">已用</span></th>`;
+  });
+  h += '</tr></thead><tbody>';
+  rows.forEach((r, rowIdx)=>{
+    h += `<tr data-row="${rowIdx}">`;
+    baseCols.forEach(key=>{
+      const meta = BASE_FIELDS[key];
+      const step = meta.step ? ` step="${meta.step}"` : '';
+      h += `<td><input data-key="${key}" type="${meta.input}"${step} value="${escapeHtml(r[key] ?? '')}"></td>`;
+    });
+    activeDims.forEach(dim=>{
+      const ind = dim.indicator;
+      const meta = ind.isCustom ? {input:'number',step:'any'} : PRESET_FIELDS[ind.fieldKey];
+      const step = meta?.step ? ` step="${meta.step}"` : '';
+      const val = r[ind.fieldKey] == null ? 0 : r[ind.fieldKey];
+      h += `<td><input data-key="${ind.fieldKey}" type="${meta?.input || 'number'}"${step} value="${escapeHtml(val)}"></td>`;
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  document.getElementById('dataTable').innerHTML = h;
+}
+
+function syncFromDom(){
+  const trs = [...document.querySelectorAll('#dataTable tbody tr')];
+  rows = trs.map((tr, idx) => {
+    const old = rows[idx] ? {...rows[idx]} : {};
+    const out = {...old};
+    Object.keys(BASE_FIELDS).forEach(key=>{
+      const meta = BASE_FIELDS[key];
+      const el = tr.querySelector(`[data-key="${key}"]`);
+      if(!el) return;
+      if(meta.input === 'text') out[key] = el.value.trim();
+      else if(meta.step === '1') out[key] = Math.round(num(el.value));
+      else out[key] = num(el.value);
+    });
+    allIndicatorColumns().forEach(key=>{
+      const el = tr.querySelector(`[data-key="${key}"]`);
+      if(!el) return;
+      out[key] = num(el.value);
+    });
+    return enrichRow(out);
+  });
+}
+
+function transformedValue(row, indicator){
+  const key = indicator.fieldKey;
+  if(indicator.isCustom) return num(row[key]);
+  const meta = PRESET_FIELDS[key];
+  if(!meta) return num(row[key]);
+  if(meta.transform === 'efficiency') return num(row.oil_output) / Math.max(num(row[key]), 1e-10);
+  return num(row[key]);
+}
+
+function buildDiffRows(activeDims){
+  const by = {};
+  rows.forEach(r => { (by[r.block] ||= []).push({...r}); });
+  const out = [];
+  Object.keys(by).forEach(block=>{
+    by[block].sort((a,b)=>num(a.year)-num(b.year));
+    for(let i=1;i<by[block].length;i++){
+      const prev = by[block][i-1];
+      const cur = by[block][i];
+      const gyBasePrev = num(prev.oil_output), gyBaseCur = num(cur.oil_output);
+      if(gyBasePrev <= 0 || gyBaseCur <= 0) continue;
+      const deltas = {};
+      let ok = true;
+      activeDims.forEach(dim=>{
+        const v0 = transformedValue(prev, dim.indicator);
+        const v1 = transformedValue(cur, dim.indicator);
+        if(v0 <= 0 || v1 <= 0){ ok = false; return; }
+        deltas[dim.id] = Math.log(v1 / v0);
+      });
+      if(!ok) continue;
+      out.push({
+        block,
+        period:`${prev.year}-${cur.year}`,
+        dlny: Math.log(gyBaseCur / gyBasePrev),
+        deltas
+      });
+    }
+  });
+  return out;
+}
+
+function estimateBetas(diffRows, activeDims){
+  if(!activeDims.length) return {};
+  const priors = activeDims.map(dim => {
+    const ind = dim.indicator;
+    return ind?.isCustom ? 0.10 : (PRESET_FIELDS[ind.fieldKey]?.prior ?? 0.10);
+  });
+  const bounds = activeDims.map(dim => {
+    const ind = dim.indicator;
+    const prior = ind?.isCustom ? 0.10 : (PRESET_FIELDS[ind.fieldKey]?.prior ?? 0.10);
+    const transform = ind?.isCustom ? 'level' : (PRESET_FIELDS[ind.fieldKey]?.transform ?? 'level');
+    if(prior >= 0.5) return [0.10, 0.80];
+    if(transform === 'efficiency' || prior <= 0.08) return [0.01, 0.30];
+    return [0.01, 0.50];
+  });
+  if(!diffRows.length){
+    const out = {};
+    activeDims.forEach((dim, idx)=> out[dim.id] = priors[idx]);
+    return out;
+  }
+  const j1Rows = diffRows.filter(r=>r.block === 'J1井区');
+  let b = priors.slice();
+  const steps = [0.10,0.05,0.02,0.01,0.005,0.002,0.001];
+  function objective(v){
+    let sse = 0;
+    diffRows.forEach(r=>{
+      let pred = 0;
+      activeDims.forEach((dim, idx)=>{ pred += v[idx] * num(r.deltas[dim.id]); });
+      const e = r.dlny - pred;
+      sse += e * e;
+    });
+    sse /= Math.max(diffRows.length, 1);
+
+    let p1 = 0, p2 = 0, p3 = 0;
+    j1Rows.forEach(r=>{
+      let explained = 0;
+      activeDims.forEach((dim, idx)=>{ explained += v[idx] * num(r.deltas[dim.id]); });
+      const tfp = (r.dlny - explained) / Math.max(Math.abs(r.dlny), 1e-10) * 100;
+      const down = Math.max(10 - tfp, 0);
+      const up = Math.max(tfp - 15, 0);
+      p1 += (tfp - 12) * (tfp - 12);
+      p2 += down * down + up * up;
+      activeDims.forEach((dim, idx)=>{
+        const c = v[idx] * num(r.deltas[dim.id]) / Math.max(Math.abs(r.dlny), 1e-10) * 100;
+        p3 += Math.max(-c, 0) ** 2;
+      });
+    });
+
+    let priorPenalty = 0;
+    v.forEach((val, idx)=>{ priorPenalty += (val - priors[idx]) * (val - priors[idx]); });
+    priorPenalty *= 0.2;
+
+    return sse + 0.001 * (
+      0.5 * p1 / Math.max(j1Rows.length, 1) +
+      5 * p2 / Math.max(j1Rows.length, 1) +
+      10 * p3 / Math.max(j1Rows.length, 1) +
+      priorPenalty
+    );
+  }
+
+  steps.forEach(step=>{
+    let improved = true;
+    let loops = 0;
+    while(improved && loops < 40){
+      improved = false;
+      loops++;
+      let best = objective(b);
+      for(let i=0;i<b.length;i++){
+        [-1,1].forEach(sign=>{
+          const cand = b.slice();
+          cand[i] = Math.min(bounds[i][1], Math.max(bounds[i][0], cand[i] + sign * step));
+          const val = objective(cand);
+          if(val + 1e-12 < best){
+            best = val;
+            b = cand;
+            improved = true;
+          }
+        });
+      }
+    }
+  });
+
+  const out = {};
+  activeDims.forEach((dim, idx)=> out[dim.id] = b[idx]);
+  return out;
+}
+
+function computeContribs(diffRows, activeDims, betaMap){
+  const by = {};
+  diffRows.forEach(r=>{
+    const gy = r.dlny;
+    const contribItem = {
+      period:r.period,
+      growth:(Math.exp(gy) - 1) * 100,
+      dims:{},
+      tfp:NaN
+    };
+    let explained = 0;
+    activeDims.forEach(dim=>{
+      const beta = num(betaMap[dim.id]);
+      const value = beta * num(r.deltas[dim.id]);
+      explained += value;
+      contribItem.dims[dim.id] = value / gy * 100;
+    });
+    contribItem.tfp = (gy - explained) / gy * 100;
+    (by[r.block] ||= []).push(contribItem);
+  });
+  return by;
+}
+
+function aggregateByYear(activeDims){
+  const by = {};
+  rows.forEach(r=>{
+    const y = num(r.year);
+    if(!by[y]) by[y] = {year:y, oil_output:0};
+    by[y].oil_output += num(r.oil_output);
+    activeDims.forEach(dim=>{
+      const key = dim.indicator.fieldKey;
+      by[y][key] = (by[y][key] || 0) + num(r[key]);
+    });
+  });
+  return Object.values(by).sort((a,b)=>a.year-b.year);
+}
+
+function simpleAdfT(series){
+  if(!series || series.length < 5) return NaN;
+  const dy = [], lag = [];
+  for(let i=1;i<series.length;i++){ dy.push(series[i]-series[i-1]); lag.push(series[i-1]); }
+  const n = dy.length;
+  if(n <= 2) return NaN;
+  const xMean = lag.reduce((a,b)=>a+b,0)/n;
+  const yMean = dy.reduce((a,b)=>a+b,0)/n;
+  let sxx = 0, sxy = 0;
+  for(let i=0;i<n;i++){ sxx += (lag[i]-xMean)*(lag[i]-xMean); sxy += (lag[i]-xMean)*(dy[i]-yMean); }
+  if(sxx <= 1e-12) return NaN;
+  const b = sxy/sxx;
+  const a = yMean-b*xMean;
+  let rss = 0;
+  for(let i=0;i<n;i++){ const e = dy[i] - (a + b*lag[i]); rss += e*e; }
+  const s2 = rss/(n-2);
+  const seb = Math.sqrt(s2/sxx);
+  return seb>0 ? b/seb : NaN;
+}
+
+function simpleOlsResiduals(y, xs){
+  const n = y.length;
+  const p = xs.length + 1;
+  if(n <= p) return [];
+  const X = [];
+  for(let i=0;i<n;i++) X.push([1, ...xs.map(col=>col[i])]);
+  const XtX = Array.from({length:p},()=>Array(p).fill(0));
+  const Xty = Array(p).fill(0);
+  for(let i=0;i<n;i++){
+    for(let j=0;j<p;j++){
+      Xty[j] += X[i][j] * y[i];
+      for(let k=0;k<p;k++) XtX[j][k] += X[i][j] * X[i][k];
+    }
+  }
+  const A = XtX.map((row,i)=>[...row, Xty[i]]);
+  for(let i=0;i<p;i++){
+    let pivot = i;
+    for(let r=i+1;r<p;r++) if(Math.abs(A[r][i]) > Math.abs(A[pivot][i])) pivot = r;
+    if(Math.abs(A[pivot][i]) < 1e-10) return [];
+    if(pivot !== i){ const temp = A[i]; A[i] = A[pivot]; A[pivot] = temp; }
+    const div = A[i][i];
+    for(let c=i;c<=p;c++) A[i][c] /= div;
+    for(let r=0;r<p;r++){
+      if(r===i) continue;
+      const factor = A[r][i];
+      for(let c=i;c<=p;c++) A[r][c] -= factor * A[i][c];
+    }
+  }
+  const beta = A.map(row=>row[p]);
+  const resid = [];
+  for(let i=0;i<n;i++){
+    let pred = beta[0];
+    for(let j=0;j<xs.length;j++) pred += beta[j+1] * xs[j][i];
+    resid.push(y[i] - pred);
+  }
+  return resid;
+}
+
+function runSimpleChecks(activeDims){
+  const yearly = aggregateByYear(activeDims);
+  if(yearly.length < 5 || !activeDims.length) return {stationarity:false, cointegration:false};
+  const lnY = yearly.map(r => Math.log(Math.max(num(r.oil_output), 1e-8)));
+  const seriesList = activeDims.map(dim => yearly.map(r => {
+    const tempRow = {...r};
+    return Math.log(Math.max(transformedValue(tempRow, dim.indicator), 1e-8));
+  }));
+  const diffPassCount = [lnY, ...seriesList].map(s => simpleAdfT(s.slice(1).map((v,i)=>v-s[i]))).filter(t => Number.isFinite(t) && t < -1.0).length;
+  const stationarity = diffPassCount >= Math.max(2, Math.ceil((seriesList.length + 1) / 2));
+  const resid = simpleOlsResiduals(lnY, seriesList);
+  const residT = simpleAdfT(resid);
+  const cointegration = Number.isFinite(residT) && residT < -2.0;
+  return {stationarity, cointegration};
+}
+
+function renderSimpleChecks(activeDims){
+  const r = runSimpleChecks(activeDims);
+  const sEl = document.getElementById('stationarityStatus');
+  const cEl = document.getElementById('cointegrationStatus');
+  sEl.textContent = r.stationarity ? '通过' : '未通过';
+  cEl.textContent = r.cointegration ? '通过' : '未通过';
+  sEl.className = 'v ' + (r.stationarity ? 'good' : '');
+  cEl.className = 'v ' + (r.cointegration ? 'good' : '');
+  return r;
+}
+
+function clearSummary(){
+  document.getElementById('avgTFP').textContent = '--';
+  document.getElementById('rangeTFP').textContent = '--';
+  document.getElementById('minTFP').textContent = '--';
+  document.getElementById('maxTFP').textContent = '--';
+}
+
+function renderBetas(activeDims, checkResult){
+  const grid = document.getElementById('betaGrid');
+  if(!activeDims.length){
+    grid.innerHTML = '<div class="kpi"><div class="k">弹性</div><div class="v">--</div></div>';
+    return;
+  }
+  const passed = checkResult && checkResult.stationarity && checkResult.cointegration;
+  if(!passed){
+    grid.innerHTML = activeDims.map((dim, idx)=>`<div class="kpi"><div class="k">β${idx+1} ${escapeHtml(dim.name)}</div><div class="v">--</div></div>`).join('');
+    return;
+  }
+  grid.innerHTML = activeDims.map((dim, idx)=>`<div class="kpi"><div class="k">β${idx+1} ${escapeHtml(dim.name)}</div><div class="v">${fmt(betas[dim.id],4)}</div></div>`).join('');
+}
+
+function renderSummary(checkResult){
+  const passed = checkResult && checkResult.stationarity && checkResult.cointegration;
+  if(!passed){
+    clearSummary();
+    return;
+  }
+  const arr = (blockContrib['J1井区'] || []).map(x=>x.tfp).filter(Number.isFinite);
+  if(!arr.length){
+    clearSummary();
+    return;
+  }
+  const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+  const mn = Math.min(...arr), mx = Math.max(...arr);
+  document.getElementById('avgTFP').textContent = pct(avg);
+  document.getElementById('rangeTFP').textContent = `${pct(mn)} ~ ${pct(mx)}`;
+  document.getElementById('minTFP').textContent = pct(mn);
+  document.getElementById('maxTFP').textContent = pct(mx);
+}
+
+function renderBlockContrib(checkResult){
+  const activeDims = dimensions.map(dim=>({id:dim.id,name:dim.name,indicator:selectedIndicator(dim)})).filter(dim=>dim.indicator);
+  const passed = checkResult && checkResult.stationarity && checkResult.cointegration;
+  const block = document.getElementById('blockSel').value || 'J1井区';
+  const arr = passed ? (blockContrib[block] || []) : [];
+  let h = '<thead><tr><th>时期</th><th>产量增长率/%</th>';
+  activeDims.forEach(dim=>{ h += `<th>${escapeHtml(dim.name)}贡献/%</th>`; });
+  h += '<th><b>科研贡献/%</b></th></tr></thead><tbody>';
+  arr.forEach(r=>{
+    h += `<tr><td>${r.period}</td><td>${fmt2(r.growth,2)}</td>`;
+    activeDims.forEach(dim=>{ h += `<td>${fmt2(r.dims[dim.id],2)}</td>`; });
+    h += `<td><b class="good">${fmt2(r.tfp,2)}</b></td></tr>`;
+  });
+  h += '</tbody>';
+  document.getElementById('contribTable').innerHTML = h;
+}
+
+function resetAll(){
+  rows = hydrateRows(clone(DEFAULT_ROWS));
+  dimensions = normalizeDimensions(clone(DEFAULT_DIMENSIONS));
+  renderBlockSel();
+  renderDimensionEditor();
+  renderDataTable();
+  recalc();
+}
+
+function recalc(){
+  syncFromDom();
+  const activeDims = dimensions.map(dim=>({id:dim.id,name:dim.name,indicator:selectedIndicator(dim)})).filter(dim=>dim.indicator);
+  renderBlockSel();
+  betas = estimateBetas(buildDiffRows(activeDims), activeDims);
+  blockContrib = computeContribs(buildDiffRows(activeDims), activeDims, betas);
+  const checkResult = renderSimpleChecks(activeDims);
+  renderBetas(activeDims, checkResult);
+  renderSummary(checkResult);
+  renderBlockContrib(checkResult);
+}
+
+dimensions = normalizeDimensions(clone(DEFAULT_DIMENSIONS));
+rows = hydrateRows(clone(DEFAULT_ROWS));
+renderBlockSel();
+renderDimensionEditor();
+renderDataTable();
+recalc();
+</script>
+</body>
+</html>

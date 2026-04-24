@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>油气项目科研贡献率测算系统（交付版）</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#e2e8f0;
+      --text:#0f172a;
+      --muted:#64748b;
+      --primary:#2563eb;
+      --primary2:#0f172a;
+      --accent:#7c3aed;
+      --good:#059669;
+      --soft:#eef4ff;
+      --shadow:0 14px 36px rgba(15,23,42,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:linear-gradient(180deg,#f7f9fc 0%,#eef3f9 100%);
+      color:var(--text);
+    }
+    .container{max-width:1440px;margin:0 auto;padding:20px}
+    .hero{
+      background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);
+      color:#fff;border-radius:30px;padding:28px;box-shadow:0 20px 60px rgba(30,58,138,.25);
+      display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:stretch;
+    }
+    .hero h1{margin:0 0 12px;font-size:34px;line-height:1.2}
+    .hero p{margin:0;color:#dbeafe;line-height:1.7}
+    .hero-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+    .badge{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:700;letter-spacing:.2px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+    button{
+      border:none;border-radius:16px;padding:13px 18px;font-size:14px;font-weight:700;cursor:pointer;
+      transition:.2s transform,.2s opacity,.2s background,.2s box-shadow;
+    }
+    button:hover{transform:translateY(-1px)}
+    .btn-primary{background:#fff;color:#0f172a}
+    .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero-side{padding:22px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:24px;backdrop-filter:blur(6px)}
+    .hero-side h3{margin:0 0 16px;font-size:16px}
+    .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .mini-tile{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.14);padding:14px;border-radius:18px}
+    .mini-tile .label{font-size:12px;color:#dbeafe;margin-bottom:8px}
+    .mini-tile .value{font-size:28px;font-weight:800}
+
+    .main{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;margin-top:20px}
+    .stack{display:flex;flex-direction:column;gap:20px}
+    .section{padding:22px}
+    .section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+    .section-head h2{margin:0;font-size:20px}
+    .section-head p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .field label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:8px}
+    .field input,.field select{
+      width:100%;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:#fff;font-size:14px;color:var(--text);
+      outline:none;
+    }
+    .field input:focus,.field select:focus{border-color:#93c5fd;box-shadow:0 0 0 4px #dbeafe}
+    .hint{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.5}
+
+    .tabs{display:flex;gap:10px;flex-wrap:wrap}
+    .tab{background:#fff;border:1px solid var(--line);color:#475569}
+    .tab.active{background:var(--primary2);color:#fff;border-color:var(--primary2)}
+
+    .triple-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .soft-card{background:#f8fafc;border:1px solid #e5edf7;border-radius:20px;padding:16px}
+    .soft-card h3{margin:0 0 14px;font-size:16px}
+
+    .tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .tech-item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+    .tech-item:last-child{margin-bottom:0}
+    .tech-item .title{font-size:14px;font-weight:700;line-height:1.5;margin-bottom:10px}
+    .tech-meta{margin-top:8px;font-size:12px;color:var(--muted)}
+
+    .result-sticky{position:sticky;top:20px;padding:22px}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .metric{padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
+    .metric .label{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .metric .value{font-size:30px;font-weight:800;line-height:1.1}
+    .metric .sub{margin-top:6px;font-size:12px;color:var(--muted)}
+
+    .final-banner{
+      margin-top:16px;padding:18px 18px 20px;border-radius:20px;
+      background:linear-gradient(135deg,#0f172a 0%,#2563eb 100%);color:#fff;
+    }
+    .final-banner .small{color:#dbeafe;font-size:12px}
+    .final-banner .big{font-size:38px;font-weight:800;margin:8px 0}
+    .final-banner .desc{color:#e2e8f0;font-size:14px;line-height:1.7}
+
+    .viz-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+    .viz-card{border:1px solid var(--line);border-radius:20px;padding:16px;background:#fff}
+    .viz-title{font-size:14px;font-weight:800;margin-bottom:12px}
+    .progress-block{display:grid;gap:10px}
+    .progress-row .meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+    .track{height:11px;border-radius:999px;background:#e9f0fb;overflow:hidden}
+    .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0f172a,#2563eb)}
+
+    .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+    .legend{display:grid;gap:10px;min-width:220px}
+    .legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px}
+    .legend-left{display:flex;align-items:center;gap:10px}
+    .swatch{width:12px;height:12px;border-radius:3px}
+
+    .bars{display:grid;gap:12px}
+    .bar-row{display:grid;grid-template-columns:126px 1fr 70px;gap:12px;align-items:center;font-size:13px}
+    .bar-track{height:16px;border-radius:999px;background:#edf2ff;overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#7c3aed)}
+
+    .gauge-wrap{display:flex;justify-content:center;align-items:center}
+    .gauge-center{text-anchor:middle}
+    .gauge-value{font-size:26px;font-weight:800;fill:#0f172a}
+    .gauge-label{font-size:12px;fill:#64748b}
+
+    .radar-wrap{display:flex;justify-content:center}
+    .radar-label{font-size:12px;fill:#334155;font-weight:600}
+    .foot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:20px 0}
+    .foot-card{padding:18px}
+    .foot-card h4{margin:0 0 10px;font-size:15px}
+    .foot-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+
+
+    .summary-list{display:grid;gap:10px}
+    .summary-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed #e2e8f0;font-size:13px}
+    .summary-row:last-child{border-bottom:none}
+    .summary-row span{color:var(--muted)}
+    .summary-row strong{text-align:right;color:#0f172a}
+    .toast{
+      position:fixed;right:20px;bottom:20px;z-index:30;
+      padding:12px 16px;border-radius:14px;background:#0f172a;color:#fff;
+      box-shadow:0 20px 50px rgba(15,23,42,.24);font-size:13px;font-weight:700;
+      opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+    @media print{
+      .hero-actions, .tabs, .foot-grid, .badge, #saveBtn, #exportBtn, #printBtn, #resetBtn, #calcBtn { display:none !important; }
+      body{background:#fff}
+      .container{max-width:none;padding:0}
+      .hero{box-shadow:none;border:1px solid #ddd}
+      .card{box-shadow:none}
+      .main{grid-template-columns:1fr}
+      .result-sticky{position:static}
+    }
+
+    @media (max-width: 1180px){
+      .main,.hero{grid-template-columns:1fr}
+      .result-sticky{position:static}
+      .triple-grid,.tech-grid{grid-template-columns:1fr}
+    }
+    @media (max-width: 760px){
+      .container{padding:12px}
+      .hero{padding:18px;border-radius:24px}
+      .hero h1{font-size:28px}
+      .form-grid,.metric-grid,.foot-grid{grid-template-columns:1fr}
+      .bar-row{grid-template-columns:1fr}
+      .mini-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div>
+        <div class="hero-badges">
+          <div class="badge">单文件交付版</div>
+          <div class="badge">点击即可使用</div>
+          <div class="badge">可保存 / 导出 / 打印</div>
+        </div>
+        <h1>油气项目科研贡献率测算系统</h1>
+        <p>
+          输入项目基本信息，以及资本、管理、劳动、技术等要素评价，点击“立即测算”即可得到技术要素收益分成率、技术贡献净值，并自动生成图形化结果。当前版本支持本地保存、结果导出与打印交付。
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" id="calcBtn">立即测算</button>
+          <button class="btn-ghost" id="saveBtn">保存项目</button>
+          <button class="btn-ghost" id="exportBtn">导出结果</button>
+          <button class="btn-ghost" id="printBtn">打印报告</button>
+          <button class="btn-ghost" id="resetBtn">重置参数</button>
+        </div>
+      </div>
+      <div class="hero-side">
+        <h3>当前测算概览</h3>
+        <div class="mini-grid">
+          <div class="mini-tile"><div class="label">技术贡献率</div><div class="value" id="heroFxz">0.00%</div></div>
+          <div class="mini-tile"><div class="label">贡献净值（亿元）</div><div class="value" id="heroYz">0.00</div></div>
+          <div class="mini-tile"><div class="label">非技术分成率</div><div class="value" id="heroS">0.00%</div></div>
+          <div class="mini-tile"><div class="label">技术强度系数</div><div class="value" id="heroTz">0.00%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="stack">
+        <div class="card section">
+          <div class="section-head">
+            <div>
+              <h2>1. 项目信息输入</h2>
+              <p>先输入项目名称、油气藏类型、阶段和项目收益净值。</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>项目名称</label>
+              <input id="projectName" value="某油气勘探开发项目" />
+            </div>
+            <div class="field">
+              <label>项目收益净值 Ez（亿元）</label>
+              <input id="netIncome" type="number" value="107" />
+            </div>
+            <div class="field">
+              <label>油气藏类型</label>
+              <select id="projectType">
+                <option value="常规油气藏">常规油气藏</option>
+                <option value="非常规油气藏" selected>非常规油气藏</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>业务阶段</label>
+              <select id="projectStageType">
+                <option value="勘探">勘探</option>
+                <option value="开发" selected>开发</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>阶段位置</label>
+              <select id="projectStage">
+                <option value="早期" selected>早期</option>
+                <option value="中期">中期</option>
+                <option value="晚期">晚期</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>阶段映射说明</label>
+              <div class="soft-card" style="height:100%">
+                <div style="font-size:14px;font-weight:800;margin-bottom:8px">当前 H 系数</div>
+                <div style="font-size:32px;font-weight:800;color:#0f172a" id="hPreview">1.00</div>
+                <div class="hint">由“常规/非常规 + 勘探/开发 + 早中晚”自动映射。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="section-head">
+            <div>
+              <h2>2. 非技术要素分成率 S</h2>
+              <p>支持详细评价模式和快捷评价模式，两种模式二选一。</p>
+            </div>
+            <div class="tabs">
+              <button class="tab active" id="tabDetailed" data-mode="detailed">详细评价</button>
+              <button class="tab" id="tabQuick" data-mode="quick">快捷评价</button>
+            </div>
+          </div>
+
+          <div id="detailedPanel">
+            <div class="triple-grid">
+              <div class="soft-card">
+                <h3>资本要素 Z</h3>
+                <div id="capitalFields"></div>
+              </div>
+              <div class="soft-card">
+                <h3>管理要素 G</h3>
+                <div id="managementFields"></div>
+              </div>
+              <div class="soft-card">
+                <h3>劳动要素 L</h3>
+                <div id="laborFields"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="quickPanel" style="display:none">
+            <div class="triple-grid" id="quickFields"></div>
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="section-head">
+            <div>
+              <h2>3. 技术要素创新强度系数 Tz</h2>
+              <p>默认按等级代表值计算，也可以输入自定义分值覆盖。</p>
+            </div>
+          </div>
+          <div class="tech-grid">
+            <div class="soft-card">
+              <h3>技术创新程度</h3>
+              <div id="techGroup1"></div>
+            </div>
+            <div class="soft-card">
+              <h3>技术先进程度</h3>
+              <div id="techGroup2"></div>
+            </div>
+            <div class="soft-card">
+              <h3>技术成熟程度</h3>
+              <div id="techGroup3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card result-sticky">
+          <div class="section-head" style="margin-bottom:14px">
+            <div>
+              <h2>4. 结果可视化</h2>
+              <p>点击测算后，数字、摘要与图表会自动更新，可直接用于汇报和交付。</p>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric"><div class="label">非技术要素分成率 S</div><div class="value" id="metricS">0.00%</div><div class="sub">资本/管理/劳动约束</div></div>
+            <div class="metric"><div class="label">阶段调整系数 H</div><div class="value" id="metricH">1.00</div><div class="sub">由项目阶段自动映射</div></div>
+            <div class="metric"><div class="label">技术创新强度系数</div><div class="value" id="metricTz">0.00%</div><div class="sub">三类技术指标加权</div></div>
+            <div class="metric"><div class="label">技术要素收益分成率</div><div class="value" id="metricFxz">0.00%</div><div class="sub">最终技术贡献率</div></div>
+          </div>
+
+          <div class="final-banner">
+            <div class="small">最终输出</div>
+            <div class="big" id="finalYz">0.00 亿元</div>
+            <div class="desc" id="finalDesc">技术贡献净值会在测算后显示在这里。</div>
+          </div>
+
+          <div class="viz-card" style="margin-top:16px">
+            <div class="viz-title">测算摘要</div>
+            <div class="summary-list">
+              <div class="summary-row"><span>项目名称</span><strong id="summaryProject">—</strong></div>
+              <div class="summary-row"><span>项目阶段</span><strong id="summaryStage">—</strong></div>
+              <div class="summary-row"><span>收益净值 Ez</span><strong id="summaryEz">—</strong></div>
+              <div class="summary-row"><span>Fmax = 1 − S</span><strong id="summaryFmax">—</strong></div>
+              <div class="summary-row"><span>Fb = (1 − S) × H</span><strong id="summaryFb">—</strong></div>
+              <div class="summary-row"><span>最后测算时间</span><strong id="summaryTime">—</strong></div>
+            </div>
+          </div>
+
+          <div class="viz-grid">
+            <div class="viz-card">
+              <div class="viz-title">贡献链条拆解</div>
+              <div class="progress-block">
+                <div class="progress-row">
+                  <div class="meta"><span>Fmax = 1 − S</span><strong id="pFmaxText">0.00%</strong></div>
+                  <div class="track"><div class="fill" id="pFmax"></div></div>
+                </div>
+                <div class="progress-row">
+                  <div class="meta"><span>Fb = (1 − S) × H</span><strong id="pFbText">0.00%</strong></div>
+                  <div class="track"><div class="fill" id="pFb"></div></div>
+                </div>
+                <div class="progress-row">
+                  <div class="meta"><span>Fxz = (1 − S) × H × Tz</span><strong id="pFxzText">0.00%</strong></div>
+                  <div class="track"><div class="fill" id="pFxz"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="viz-card">
+              <div class="viz-title">S 构成图</div>
+              <div class="donut-wrap">
+                <svg id="donutSvg" width="180" height="180" viewBox="0 0 180 180"></svg>
+                <div class="legend" id="donutLegend"></div>
+              </div>
+            </div>
+
+            <div class="viz-card">
+              <div class="viz-title">技术创新强度柱状图</div>
+              <div class="bars" id="tzBars"></div>
+            </div>
+
+            <div class="viz-card">
+              <div class="viz-title">技术贡献率仪表盘</div>
+              <div class="gauge-wrap">
+                <svg id="gaugeSvg" width="320" height="200" viewBox="0 0 320 200"></svg>
+              </div>
+            </div>
+
+            <div class="viz-card">
+              <div class="viz-title">综合雷达图</div>
+              <div class="radar-wrap">
+                <svg id="radarSvg" width="320" height="320" viewBox="0 0 320 320"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const LEVEL_OPTIONS = [
+  {value:'I', label:'Ⅰ级'},
+  {value:'II', label:'Ⅱ级'},
+  {value:'III', label:'Ⅲ级'},
+  {value:'IV', label:'Ⅳ级'}
+];
+const LEVEL_WEIGHT_MAP = {I:0.05, II:0.04, III:0.03, IV:0.02};
+const LEVEL_SCORE_MAP = {I:0.75, II:0.65, III:0.55, IV:0.50};
+const COLORS = ['#0f172a','#2563eb','#7c3aed','#0ea5e9','#64748b','#94a3b8'];
+
+const detailedFactors = {
+  capital: [
+    { key:'Zbf', name:'油气储量丰度', desc:{I:'高',II:'中',III:'低',IV:'特低'} },
+    { key:'Zbg', name:'油气储量规模', desc:{I:'特大型',II:'大型',III:'中型',IV:'小型'} },
+    { key:'Zbn', name:'油气开发产能', desc:{I:'高',II:'中',III:'低',IV:'特低'} },
+    { key:'Zbc', name:'油气人才资本构成', desc:{I:'高',II:'较高',III:'中',IV:'低'} },
+    { key:'Zbp', name:'油气研发投资比重', desc:{I:'高',II:'较高',III:'中',IV:'低'} },
+  ],
+  management: [
+    { key:'Gbq', name:'项目启动', desc:{I:'持续创新',II:'促进发展',III:'有特色',IV:'较传统'} },
+    { key:'Gbg', name:'项目规划', desc:{I:'杰出',II:'优秀',III:'良好',IV:'较好'} },
+    { key:'Gbz', name:'项目执行', desc:{I:'杰出',II:'优秀',III:'良好',IV:'较好'} },
+    { key:'Gbj', name:'项目监督', desc:{I:'杰出',II:'优秀',III:'良好',IV:'较好'} },
+    { key:'Gbs', name:'项目收尾', desc:{I:'杰出',II:'优秀',III:'良好',IV:'较好'} },
+  ],
+  labor: [
+    { key:'Lbf', name:'油气人才资源配置', desc:{I:'优秀',II:'良好',III:'好',IV:'较好'} },
+    { key:'Lbz', name:'油气工程装备', desc:{I:'精良',II:'良好',III:'好',IV:'较好'} },
+    { key:'Lbm', name:'油气产层埋深', desc:{I:'中浅层',II:'中深层',III:'深层',IV:'超深层'} },
+    { key:'Lbw', name:'油气储层物性', desc:{I:'特高',II:'高',III:'中',IV:'低'} },
+    { key:'Lbp', name:'油气品质类型', desc:{I:'高—中',II:'较低',III:'低',IV:'特低'} },
+  ]
+};
+
+const quickSFactors = [
+  { key:'SZg', name:'油气储量规模', weights:{I:0.20,II:0.17,III:0.14,IV:0.11}, desc:{I:'特大型',II:'大型',III:'中型',IV:'小型'} },
+  { key:'SZf', name:'油气储量丰度', weights:{I:0.17,II:0.14,III:0.11,IV:0.08}, desc:{I:'高',II:'中',III:'低',IV:'特低'} },
+  { key:'SLw', name:'油气储层物性', weights:{I:0.14,II:0.11,III:0.08,IV:0.06}, desc:{I:'特高',II:'高',III:'中',IV:'低'} },
+  { key:'SLm', name:'油气产层埋深', weights:{I:0.11,II:0.08,III:0.06,IV:0.04}, desc:{I:'中浅层',II:'中深层',III:'深层',IV:'超深层'} },
+  { key:'SZn', name:'油气开发产能', weights:{I:0.08,II:0.06,III:0.04,IV:0.01}, desc:{I:'高',II:'中',III:'低',IV:'特低'} },
+  { key:'SLp', name:'油气品质类型', weights:{I:0.05,II:0.04,III:0.02,IV:0.00}, desc:{I:'高或中',II:'较低',III:'低',IV:'特低'} },
+];
+
+const techIndicators = [
+  { group:'技术创新程度', groupWeight:0.5, key:'T11', name:'解决技术难题的能力', subWeight:0.4, desc:{I:'突破性问题',II:'关键瓶颈问题',III:'关键问题',IV:'较难问题'} },
+  { group:'技术创新程度', groupWeight:0.5, key:'T12', name:'掌握核心技术的程度', subWeight:0.35, desc:{I:'5项专利/国际标准',II:'4项专利/行业标准',III:'3项专利/企业标准',IV:'2项专利/企业秘密'} },
+  { group:'技术创新程度', groupWeight:0.5, key:'T13', name:'自主创新技术的比重', subWeight:0.25, desc:{I:'大部分技术',II:'主体技术',III:'多项技术',IV:'单项技术'} },
+  { group:'技术先进程度', groupWeight:0.3, key:'T21', name:'总体技术先进水平', subWeight:0.4, desc:{I:'国际领先',II:'国际先进',III:'国内领先',IV:'国内先进'} },
+  { group:'技术先进程度', groupWeight:0.3, key:'T22', name:'主要技术指标水平', subWeight:0.35, desc:{I:'国际领先',II:'国际先进',III:'国内领先',IV:'国内先进'} },
+  { group:'技术先进程度', groupWeight:0.3, key:'T23', name:'经济指标水平', subWeight:0.25, desc:{I:'国际领先',II:'国际先进',III:'国内领先',IV:'国内先进'} },
+  { group:'技术成熟程度', groupWeight:0.2, key:'T31', name:'实际应用规模与转化程度', subWeight:0.4, desc:{I:'国内外',II:'国内',III:'集团公司',IV:'地区公司'} },
+  { group:'技术成熟程度', groupWeight:0.2, key:'T32', name:'推动科技进步与竞争优势', subWeight:0.35, desc:{I:'国际优势显著',II:'国内优势显著',III:'行业优势显著',IV:'行业优势一般'} },
+  { group:'技术成熟程度', groupWeight:0.2, key:'T33', name:'关键技术的稳定、可靠性、有形化', subWeight:0.25, desc:{I:'非常高',II:'高',III:'较高',IV:'基本'} },
+];
+
+const H_MAP = {
+  '常规油气藏': { '勘探': { '早期':1.0, '中期':0.9, '晚期':0.8 }, '开发': { '早期':0.8, '中期':0.9, '晚期':1.0 } },
+  '非常规油气藏': { '勘探': { '早期':0.8, '中期':0.9, '晚期':1.0 }, '开发': { '早期':1.0, '中期':0.9, '晚期':0.8 } },
+};
+
+let sMode = 'detailed';
+let lastResult = null;
+const STORAGE_KEY = 'oil_gas_contribution_delivery_app_v1';
+
+function pct(v){ return (v*100).toFixed(2) + '%'; }
+function money(v){ return Number(v||0).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+function nowText(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function showToast(text){
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=> toast.classList.remove('show'), 1800);
+}
+
+function makeSelect(id){
+  const sel = document.createElement('select');
+  sel.id = id;
+  LEVEL_OPTIONS.forEach(o=>{
+    const op = document.createElement('option'); op.value=o.value; op.textContent=o.label; sel.appendChild(op);
+  });
+  sel.value = 'II';
+  return sel;
+}
+
+function renderDetailed(containerId, list){
+  const root = document.getElementById(containerId);
+  root.innerHTML = '';
+  list.forEach(item=>{
+    const wrap = document.createElement('div'); wrap.className='field'; wrap.style.marginBottom='12px';
+    const label = document.createElement('label'); label.textContent = item.name;
+    const sel = makeSelect(item.key);
+    const hint = document.createElement('div'); hint.className='hint'; hint.id = item.key + '_hint';
+    wrap.appendChild(label); wrap.appendChild(sel); wrap.appendChild(hint); root.appendChild(wrap);
+  });
+}
+
+function renderQuick(){
+  const root = document.getElementById('quickFields');
+  root.innerHTML = '';
+  quickSFactors.forEach(item=>{
+    const box = document.createElement('div'); box.className='soft-card';
+    const field = document.createElement('div'); field.className='field';
+    const label = document.createElement('label'); label.textContent=item.name;
+    const sel = makeSelect(item.key);
+    const hint = document.createElement('div'); hint.className='hint'; hint.id = item.key + '_hint';
+    field.appendChild(label); field.appendChild(sel); field.appendChild(hint); box.appendChild(field); root.appendChild(box);
+  });
+}
+
+function renderTech(groupId, groupName){
+  const root = document.getElementById(groupId); root.innerHTML='';
+  techIndicators.filter(x=>x.group===groupName).forEach(item=>{
+    const box = document.createElement('div'); box.className='tech-item';
+    box.innerHTML = `
+      <div class="title">${item.name}</div>
+      <div class="field">
+        <label>等级</label>
+      </div>
+      <div class="field" style="margin-top:10px">
+        <label>自定义分值（%）</label>
+        <input type="number" id="${item.key}_custom" placeholder="留空则按默认代表值" />
+      </div>
+      <div class="tech-meta" id="${item.key}_meta"></div>
+    `;
+    const selectWrap = box.querySelector('.field');
+    const sel = makeSelect(item.key + '_level');
+    selectWrap.appendChild(sel);
+    root.appendChild(box);
+  });
+}
+
+function currentH(){
+  const type = document.getElementById('projectType').value;
+  const stageType = document.getElementById('projectStageType').value;
+  const stage = document.getElementById('projectStage').value;
+  return H_MAP[type][stageType][stage];
+}
+
+function collectDetailed(){
+  const groups = ['capital','management','labor'];
+  const breakdown = [];
+  let total = 0;
+  groups.forEach(g=>{
+    const list = detailedFactors[g];
+    const sum = list.reduce((acc,item)=> acc + LEVEL_WEIGHT_MAP[document.getElementById(item.key).value], 0);
+    breakdown.push({
+      name: g==='capital'?'资本':g==='management'?'管理':'劳动',
+      value: sum
+    });
+    total += sum;
+  });
+  return { total, breakdown };
+}
+
+function collectQuick(){
+  const rows = quickSFactors.map(item=>({
+    name:item.name,
+    value:item.weights[document.getElementById(item.key).value]
+  }));
+  return { total: rows.reduce((a,b)=>a+b.value,0), breakdown: rows };
+}
+
+function collectTech(){
+  const rows = techIndicators.map(item=>{
+    const level = document.getElementById(item.key + '_level').value;
+    const custom = document.getElementById(item.key + '_custom').value;
+    const score = custom === '' ? LEVEL_SCORE_MAP[level] : Number(custom)/100;
+    return {
+      ...item,
+      level,
+      score,
+      value: item.groupWeight * item.subWeight * score
+    };
+  });
+  const groups = ['技术创新程度','技术先进程度','技术成熟程度'].map(name=>({
+    name,
+    value: rows.filter(r=>r.group===name).reduce((a,b)=>a+b.value,0)
+  }));
+  return { total: rows.reduce((a,b)=>a+b.value,0), groups, rows };
+}
+
+function setHints(){
+  Object.values(detailedFactors).flat().forEach(item=>{
+    const lv = document.getElementById(item.key).value;
+    document.getElementById(item.key + '_hint').textContent = `${item.desc[lv]} ｜ 当前权重 ${pct(LEVEL_WEIGHT_MAP[lv])}`;
+  });
+  quickSFactors.forEach(item=>{
+    const lv = document.getElementById(item.key).value;
+    document.getElementById(item.key + '_hint').textContent = `${item.desc[lv]} ｜ 当前权重 ${pct(item.weights[lv])}`;
+  });
+  techIndicators.forEach(item=>{
+    const lv = document.getElementById(item.key + '_level').value;
+    const custom = document.getElementById(item.key + '_custom').value;
+    const show = custom === '' ? pct(LEVEL_SCORE_MAP[lv]) : pct(Number(custom)/100);
+    document.getElementById(item.key + '_meta').textContent = `${item.desc[lv]} ｜ 一级权重 ${pct(item.groupWeight)} ｜ 二级权重 ${pct(item.subWeight)} ｜ 当前得分 ${show}`;
+  });
+  document.getElementById('hPreview').textContent = currentH().toFixed(2);
+}
+
+function drawDonut(data, total){
+  const svg = document.getElementById('donutSvg');
+  svg.innerHTML = '';
+  const cx=90, cy=90, r=58, c = 2*Math.PI*r;
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  bg.setAttribute('cx',cx);bg.setAttribute('cy',cy);bg.setAttribute('r',r);bg.setAttribute('fill','none');bg.setAttribute('stroke','#e2e8f0');bg.setAttribute('stroke-width','18');
+  svg.appendChild(bg);
+  let offset = 0;
+  data.forEach((d,i)=>{
+    const frac = total === 0 ? 0 : d.value / total;
+    const seg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    seg.setAttribute('cx',cx);seg.setAttribute('cy',cy);seg.setAttribute('r',r);
+    seg.setAttribute('fill','none');
+    seg.setAttribute('stroke',COLORS[i % COLORS.length]);
+    seg.setAttribute('stroke-width','18');
+    seg.setAttribute('stroke-linecap','butt');
+    seg.setAttribute('transform','rotate(-90 90 90)');
+    seg.setAttribute('stroke-dasharray', `${Math.max(frac*c,0)} ${c}`);
+    seg.setAttribute('stroke-dashoffset', `${-offset}`);
+    svg.appendChild(seg);
+    offset += frac*c;
+  });
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t1.setAttribute('x',90);t1.setAttribute('y',82);t1.setAttribute('text-anchor','middle');t1.setAttribute('fill','#64748b');t1.setAttribute('font-size','12');t1.textContent='S';
+  const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t2.setAttribute('x',90);t2.setAttribute('y',106);t2.setAttribute('text-anchor','middle');t2.setAttribute('fill','#0f172a');t2.setAttribute('font-size','24');t2.setAttribute('font-weight','800');t2.textContent=pct(total);
+  svg.appendChild(t1); svg.appendChild(t2);
+
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = '';
+  data.forEach((d,i)=>{
+    const row = document.createElement('div'); row.className='legend-row';
+    row.innerHTML = `<div class="legend-left"><span class="swatch" style="background:${COLORS[i % COLORS.length]}"></span><span>${d.name}</span></div><strong>${pct(d.value)}</strong>`;
+    legend.appendChild(row);
+  });
+}
+
+function drawBars(groups){
+  const root = document.getElementById('tzBars'); root.innerHTML='';
+  groups.forEach((g,i)=>{
+    const row = document.createElement('div'); row.className='bar-row';
+    row.innerHTML = `<div>${g.name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(3,g.value*100)}%;background:linear-gradient(90deg, ${COLORS[i]}, #7c3aed)"></div></div><strong>${pct(g.value)}</strong>`;
+    root.appendChild(row);
+  });
+}
+
+function polarToCartesian(cx, cy, r, angle){
+  return {x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle)};
+}
+
+function arcPath(cx, cy, r, start, end){
+  const s = polarToCartesian(cx,cy,r,start), e = polarToCartesian(cx,cy,r,end);
+  const large = end - start <= Math.PI ? 0 : 1;
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+}
+
+function drawGauge(value){
+  const svg = document.getElementById('gaugeSvg'); svg.innerHTML='';
+  const cx=160, cy=160, r=110, start=Math.PI, end=2*Math.PI;
+  const base = document.createElementNS('http://www.w3.org/2000/svg','path');
+  base.setAttribute('d', arcPath(cx,cy,r,start,end));
+  base.setAttribute('fill','none'); base.setAttribute('stroke','#e2e8f0'); base.setAttribute('stroke-width','20'); base.setAttribute('stroke-linecap','round');
+  svg.appendChild(base);
+  const fg = document.createElementNS('http://www.w3.org/2000/svg','path');
+  fg.setAttribute('d', arcPath(cx,cy,r,start,start + Math.PI*clamp01(value)));
+  fg.setAttribute('fill','none'); fg.setAttribute('stroke','#2563eb'); fg.setAttribute('stroke-width','20'); fg.setAttribute('stroke-linecap','round');
+  svg.appendChild(fg);
+
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t1.setAttribute('x',160);t1.setAttribute('y',135);t1.setAttribute('class','gauge-value');t1.textContent = pct(value);
+  const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t2.setAttribute('x',160);t2.setAttribute('y',156);t2.setAttribute('class','gauge-label');t2.textContent = '最终技术贡献率';
+  svg.appendChild(t1); svg.appendChild(t2);
+}
+
+function drawRadar(items){
+  const svg = document.getElementById('radarSvg'); svg.innerHTML='';
+  const cx=160, cy=160, maxR=110, levels=4;
+  for(let l=1;l<=levels;l++){
+    const r = maxR * l / levels;
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    const pts = items.map((it,i)=>{
+      const angle = -Math.PI/2 + i * 2*Math.PI/items.length;
+      const p = polarToCartesian(cx,cy,r,angle);
+      return `${p.x},${p.y}`;
+    }).join(' ');
+    poly.setAttribute('points',pts); poly.setAttribute('fill','none'); poly.setAttribute('stroke','#dbe4f1'); poly.setAttribute('stroke-width','1');
+    svg.appendChild(poly);
+  }
+  items.forEach((it,i)=>{
+    const angle = -Math.PI/2 + i * 2*Math.PI/items.length;
+    const end = polarToCartesian(cx,cy,maxR,angle);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',cx); line.setAttribute('y1',cy); line.setAttribute('x2',end.x); line.setAttribute('y2',end.y); line.setAttribute('stroke','#dbe4f1');
+    svg.appendChild(line);
+
+    const labelPt = polarToCartesian(cx,cy,maxR+22,angle);
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',labelPt.x); txt.setAttribute('y',labelPt.y); txt.setAttribute('class','radar-label'); txt.setAttribute('text-anchor','middle'); txt.textContent = it.name;
+    svg.appendChild(txt);
+  });
+  const ptsVal = items.map((it,i)=>{
+    const angle = -Math.PI/2 + i * 2*Math.PI/items.length;
+    const p = polarToCartesian(cx,cy,maxR*clamp01(it.value),angle);
+    return `${p.x},${p.y}`;
+  }).join(' ');
+  const polyVal = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  polyVal.setAttribute('points',ptsVal); polyVal.setAttribute('fill','rgba(37,99,235,.25)'); polyVal.setAttribute('stroke','#2563eb'); polyVal.setAttribute('stroke-width','2');
+  svg.appendChild(polyVal);
+  items.forEach((it,i)=>{
+    const angle = -Math.PI/2 + i * 2*Math.PI/items.length;
+    const p = polarToCartesian(cx,cy,maxR*clamp01(it.value),angle);
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',4);c.setAttribute('fill','#2563eb');
+    svg.appendChild(c);
+  });
+}
+
+function calculate(){
+  setHints();
+  const SData = sMode === 'detailed' ? collectDetailed() : collectQuick();
+  const tech = collectTech();
+  const H = currentH();
+  const Ez = Number(document.getElementById('netIncome').value || 0);
+  const S = SData.total;
+  const fmax = 1 - S;
+  const fb = fmax * H;
+  const fxz = fmax * H * tech.total;
+  const yz = Ez * fxz;
+  const timestamp = nowText();
+
+  document.getElementById('metricS').textContent = pct(S);
+  document.getElementById('metricH').textContent = H.toFixed(2);
+  document.getElementById('metricTz').textContent = pct(tech.total);
+  document.getElementById('metricFxz').textContent = pct(fxz);
+  document.getElementById('finalYz').textContent = `${money(yz)} 亿元`;
+  document.getElementById('finalDesc').textContent = `在当前参数下，技术要素收益分成率为 ${pct(fxz)}，对应的技术贡献净值为 ${money(yz)} 亿元。`;
+
+  document.getElementById('heroFxz').textContent = pct(fxz);
+  document.getElementById('heroYz').textContent = money(yz);
+  document.getElementById('heroS').textContent = pct(S);
+  document.getElementById('heroTz').textContent = pct(tech.total);
+
+  document.getElementById('pFmaxText').textContent = pct(fmax);
+  document.getElementById('pFbText').textContent = pct(fb);
+  document.getElementById('pFxzText').textContent = pct(fxz);
+  document.getElementById('pFmax').style.width = `${Math.max(4,fmax*100)}%`;
+  document.getElementById('pFb').style.width = `${Math.max(4,fb*100)}%`;
+  document.getElementById('pFxz').style.width = `${Math.max(4,fxz*100)}%`;
+
+  document.getElementById('summaryProject').textContent = document.getElementById('projectName').value || '—';
+  document.getElementById('summaryStage').textContent = `${document.getElementById('projectType').value} / ${document.getElementById('projectStageType').value} / ${document.getElementById('projectStage').value}`;
+  document.getElementById('summaryEz').textContent = `${money(Ez)} 亿元`;
+  document.getElementById('summaryFmax').textContent = pct(fmax);
+  document.getElementById('summaryFb').textContent = pct(fb);
+  document.getElementById('summaryTime').textContent = timestamp;
+
+  drawDonut(SData.breakdown, S);
+  drawBars(tech.groups);
+  drawGauge(fxz);
+  drawRadar([
+    {name:'非技术约束留存', value:fmax},
+    {name:'阶段放大系数', value:H},
+    {name:'技术创新强度', value:tech.total},
+    {name:'最终贡献率', value:fxz}
+  ]);
+
+  lastResult = {
+    timestamp,
+    mode: sMode,
+    project: {
+      name: document.getElementById('projectName').value,
+      type: document.getElementById('projectType').value,
+      stageType: document.getElementById('projectStageType').value,
+      stage: document.getElementById('projectStage').value,
+      ez: Ez
+    },
+    input: {
+      detailed: Object.fromEntries(Object.values(detailedFactors).flat().map(item => [item.key, document.getElementById(item.key).value])),
+      quick: Object.fromEntries(quickSFactors.map(item => [item.key, document.getElementById(item.key).value])),
+      tech: Object.fromEntries(techIndicators.map(item => [item.key, {
+        level: document.getElementById(item.key + '_level').value,
+        custom: document.getElementById(item.key + '_custom').value
+      }]))
+    },
+    output: { S, H, Tz: tech.total, Fmax: fmax, Fb: fb, Fxz: fxz, Yz: yz }
+  };
+}
+
+function setMode(mode){
+  sMode = mode;
+  document.getElementById('detailedPanel').style.display = mode === 'detailed' ? 'block' : 'none';
+  document.getElementById('quickPanel').style.display = mode === 'quick' ? 'block' : 'none';
+  document.getElementById('tabDetailed').classList.toggle('active', mode === 'detailed');
+  document.getElementById('tabQuick').classList.toggle('active', mode === 'quick');
+  calculate();
+}
+
+function saveProject(){
+  calculate();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(lastResult));
+  showToast('已保存当前项目');
+}
+
+function applyState(saved, options = {}){
+  if(!saved) return false;
+  const { showMessage = false, message = '已恢复项目数据' } = options;
+  try{
+    if(saved.project){
+      document.getElementById('projectName').value = saved.project.name || '某油气勘探开发项目';
+      document.getElementById('projectType').value = saved.project.type || '非常规油气藏';
+      document.getElementById('projectStageType').value = saved.project.stageType || '开发';
+      document.getElementById('projectStage').value = saved.project.stage || '早期';
+      document.getElementById('netIncome').value = saved.project.ez ?? 107;
+    }
+    if(saved.input?.detailed){
+      Object.entries(saved.input.detailed).forEach(([k,v])=>{ if(document.getElementById(k)) document.getElementById(k).value = v; });
+    }
+    if(saved.input?.quick){
+      Object.entries(saved.input.quick).forEach(([k,v])=>{ if(document.getElementById(k)) document.getElementById(k).value = v; });
+    }
+    if(saved.input?.tech){
+      Object.entries(saved.input.tech).forEach(([k,v])=>{
+        if(document.getElementById(k + '_level')) document.getElementById(k + '_level').value = v.level || 'II';
+        if(document.getElementById(k + '_custom')) document.getElementById(k + '_custom').value = v.custom || '';
+      });
+    }
+    if(saved.mode) setMode(saved.mode); else calculate();
+    setHints();
+    calculate();
+    if(showMessage) showToast(message);
+    return true;
+  }catch(e){
+    console.error(e);
+    return false;
+  }
+}
+
+function loadSavedProject(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return false;
+  try{
+    const saved = JSON.parse(raw);
+    return applyState(saved, { showMessage:true, message:'已恢复上次保存项目' });
+  }catch(e){
+    console.error(e);
+    return false;
+  }
+}
+
+function exportResult(){
+  calculate();
+  const safeName = (lastResult.project.name || '科研贡献测算').replace(/[\/:*?"<>|]/g,'_');
+  const html = document.documentElement.outerHTML;
+  const stateScript = `<script>window.__SHARED_STATE__ = ${JSON.stringify(lastResult).replace(/<\/script/gi, '<\\/script')};<\/script>`;
+  const outputHtml = html.includes('</body>') ? html.replace('</body>', `${stateScript}
+</body>`) : `${html}
+${stateScript}`;
+  const blob = new Blob([outputHtml], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeName}_测算结果.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('已导出当前状态网页');
+}
+
+function printReport(){
+  calculate();
+  window.print();
+}
+
+function resetAll(){
+  document.getElementById('projectName').value = '某油气勘探开发项目';
+  document.getElementById('projectType').value = '非常规油气藏';
+  document.getElementById('projectStageType').value = '开发';
+  document.getElementById('projectStage').value = '早期';
+  document.getElementById('netIncome').value = '107';
+  Object.values(detailedFactors).flat().forEach(item=> document.getElementById(item.key).value = 'II');
+  quickSFactors.forEach(item=> document.getElementById(item.key).value = 'II');
+  techIndicators.forEach(item=>{
+    document.getElementById(item.key + '_level').value = 'II';
+    document.getElementById(item.key + '_custom').value = '';
+  });
+  setMode('detailed');
+  setHints();
+  calculate();
+}
+
+function wireEvents(){
+  document.querySelectorAll('input,select').forEach(el=> el.addEventListener('change', ()=>{ setHints(); calculate(); }));
+  document.getElementById('calcBtn').addEventListener('click', calculate);
+  document.getElementById('saveBtn').addEventListener('click', saveProject);
+  document.getElementById('exportBtn').addEventListener('click', exportResult);
+  document.getElementById('printBtn').addEventListener('click', printReport);
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+  document.getElementById('tabDetailed').addEventListener('click', ()=> setMode('detailed'));
+  document.getElementById('tabQuick').addEventListener('click', ()=> setMode('quick'));
+}
+
+(function init(){
+  renderDetailed('capitalFields', detailedFactors.capital);
+  renderDetailed('managementFields', detailedFactors.management);
+  renderDetailed('laborFields', detailedFactors.labor);
+  renderQuick();
+  renderTech('techGroup1','技术创新程度');
+  renderTech('techGroup2','技术先进程度');
+  renderTech('techGroup3','技术成熟程度');
+  wireEvents();
+  setHints();
+  if(window.__SHARED_STATE__){
+    applyState(window.__SHARED_STATE__);
+  }else if(!loadSavedProject()){
+    calculate();
+  }
+})();
+</script>
+</body>
+</html>

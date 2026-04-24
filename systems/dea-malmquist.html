@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>DEA+Malmquist指数科研贡献测算系统</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e6ebf2;--blue:#2563eb;--soft:#eaf2ff;--shadow:0 10px 30px rgba(15,23,42,.06);--r:18px}
+*{box-sizing:border-box} body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:1600px;margin:0 auto;padding:22px} .hero{background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#60a5fa);color:#fff;padding:24px 28px;border-radius:24px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{margin:0;font-size:28px} .hero p{margin:8px 0 0;font-size:14px;line-height:1.8;opacity:.95}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px} @media (max-width:1200px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+.title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px} .title h2{margin:0;font-size:18px}
+.badge{font-size:12px;font-weight:800;color:var(--blue);background:var(--soft);padding:6px 10px;border-radius:999px}
+.kpiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px} @media(max-width:900px){.kpiGrid{grid-template-columns:1fr 1fr}}
+.kpi{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#fff,#f8fbff)} .kpi .k{font-size:12px;color:var(--muted)} .kpi .v{font-size:24px;font-weight:900;margin-top:6px}
+.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px} table{border-collapse:collapse;width:100%;min-width:780px} th,td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:center;white-space:nowrap;font-size:13px} th{background:#f8fafc;color:#475569;position:sticky;top:0;z-index:1}
+input,select{border:1px solid #d6dde8;border-radius:10px;padding:6px 8px;font-size:13px;background:#fff} input[type="number"]{width:100px} input.name{width:190px}
+input.code{width:120px} .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{height:38px;border:none;border-radius:12px;padding:0 14px;font-size:14px;font-weight:800;cursor:pointer} .primary{background:var(--blue);color:#fff} .light{background:#f3f4f6;color:#111827} .danger{background:#fff1f2;color:#be123c}
+.small{font-size:12px;color:var(--muted);line-height:1.8} .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;background:var(--soft);color:var(--blue)}
+.ok{color:#027a48;font-weight:800} .warn{color:#b54708;font-weight:800} .mono{font-family:Consolas,Menlo,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>DEA+Malmquist指数科研贡献测算系统</h1>
+    
+  </section>
+
+  <div class="card">
+    <div class="title"><h2>指标设置</h2></div>
+    <div class="toolbar" style="margin-bottom:10px">
+      <button class="primary" onclick="addCustomIndicator()">新增自定义指标</button>
+      <button class="light" onclick="addPresetIndicator()">从预设新增指标</button>
+      <button class="light" onclick="resetIndicators()">恢复默认指标</button>
+      <button class="light" onclick="recalcAll()">重新计算</button>
+    </div>
+    <div class="tableWrap"><table id="indicatorTable"></table></div>
+    
+  </div>
+
+  <div class="grid">
+    <div>
+      <section class="card">
+        <div class="title"><h2>30个决策单元数据输入</h2><span class="badge">逐行录入</span></div>
+        <div class="toolbar" style="margin-bottom:10px">
+          <button class="primary" onclick="addDataRow()">新增行</button>
+          <button class="danger" onclick="deleteLastDataRow()">删除最后一行</button>
+          <button class="light" onclick="resetAll()">恢复默认数据</button>
+        </div>
+        <div class="tableWrap"><table id="dataTable"></table></div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>CCR技术效率结果</h2><span class="badge">求解结果</span></div>
+        <div class="tableWrap"><table id="effTable"></table></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <div class="title"><h2>Malmquist分解结果</h2><span class="badge">标准方法</span></div>
+        <div class="kpiGrid">
+          <div class="kpi"><div class="k">DMU数量</div><div class="v" id="kDMU">--</div></div>
+          <div class="kpi"><div class="k">投入指标数</div><div class="v" id="kIn">--</div></div>
+          <div class="kpi"><div class="k">产出指标数</div><div class="v" id="kOut">--</div></div>
+          <div class="kpi"><div class="k">2022-2025平均贡献率</div><div class="v" id="kAvg">--</div></div>
+        </div>
+        <div class="tableWrap" style="margin-top:12px"><table id="resultTable"></table></div>
+      </section>
+
+      <section class="card">
+        <div class="title"><h2>当前指标汇总</h2><span class="badge">便于核对</span></div>
+        <div class="tableWrap"><table id="summaryTable"></table></div>
+      </section>
+    </div>
+  </div>
+</div>
+<script>
+const DEFAULT_TOTALS = [{"year": 2019, "oil_output": 32.0, "explore_rd": 134.38, "develop_rd": 167.77, "develop_invest_ref": 1677.73, "equip_value": 10000.0}, {"year": 2020, "oil_output": 36.0, "explore_rd": 135.81, "develop_rd": 169.65, "develop_invest_ref": 1696.46, "equip_value": 11625.0}, {"year": 2021, "oil_output": 42.0, "explore_rd": 137.1, "develop_rd": 171.55, "develop_invest_ref": 1715.45, "equip_value": 14143.75}, {"year": 2022, "oil_output": 50.0, "explore_rd": 138.46, "develop_rd": 173.38, "develop_invest_ref": 1733.83, "equip_value": 17646.01}, {"year": 2023, "oil_output": 63.0, "explore_rd": 139.92, "develop_rd": 174.82, "develop_invest_ref": 1748.18, "equip_value": 23839.76}, {"year": 2024, "oil_output": 95.0, "explore_rd": 141.21, "develop_rd": 175.93, "develop_invest_ref": 1759.32, "equip_value": 43819.75}, {"year": 2025, "oil_output": 151.0, "explore_rd": 142.17, "develop_rd": 177.1, "develop_invest_ref": 1771.03, "equip_value": 86440.23}];
+const BASE_SHARES = {"2019": [{"project": "DMU01", "oil_output": 0.021943749999999998, "explore_rd": 0.023139604107754133, "develop_rd": 0.023339095189843236, "equip_value": 0.02288851}, {"project": "DMU02", "oil_output": 0.024553125, "explore_rd": 0.025972614972466144, "develop_rd": 0.02553257435775168, "equip_value": 0.025702080000000002}, {"project": "DMU03", "oil_output": 0.026490625, "explore_rd": 0.02812174430718857, "develop_rd": 0.02693568576026703, "equip_value": 0.027888979999999997}, {"project": "DMU04", "oil_output": 0.031546875, "explore_rd": 0.02722131269534157, "develop_rd": 0.02562496274661739, "equip_value": 0.03169402}, {"project": "DMU05", "oil_output": 0.0276375, "explore_rd": 0.029605596070843877, "develop_rd": 0.02705966501758359, "equip_value": 0.02968839}, {"project": "DMU06", "oil_output": 0.026909375, "explore_rd": 0.028970828992409586, "develop_rd": 0.02600822554687966, "equip_value": 0.029323520000000002}, {"project": "DMU07", "oil_output": 0.029903125, "explore_rd": 0.02571290370590862, "develop_rd": 0.02285986767598498, "equip_value": 0.03069265}, {"project": "DMU08", "oil_output": 0.02410625, "explore_rd": 0.026213722280101208, "develop_rd": 0.02308577218811468, "equip_value": 0.027208980000000004}, {"project": "DMU09", "oil_output": 0.022753125, "explore_rd": 0.024840750111623754, "develop_rd": 0.02188710734934732, "equip_value": 0.02616971}, {"project": "DMU10", "oil_output": 0.021859375, "explore_rd": 0.023926179490995684, "develop_rd": 0.021243964952017642, "equip_value": 0.02559387}, {"project": "DMU11", "oil_output": 0.027578125, "explore_rd": 0.0218470010418217, "develop_rd": 0.019755617810097156, "equip_value": 0.0278132}, {"project": "DMU12", "oil_output": 0.0221125, "explore_rd": 0.024155380264920374, "develop_rd": 0.0222292424152113, "equip_value": 0.02655356}, {"project": "DMU13", "oil_output": 0.023278125, "explore_rd": 0.025293198392617948, "develop_rd": 0.023892829468915775, "equip_value": 0.02806652}, {"project": "DMU14", "oil_output": 0.024990625, "explore_rd": 0.026925137669296027, "develop_rd": 0.026193598378732787, "equip_value": 0.030018259999999998}, {"project": "DMU15", "oil_output": 0.027071875, "explore_rd": 0.02883911296323858, "develop_rd": 0.028925314418549203, "equip_value": 0.03211224}, {"project": "DMU16", "oil_output": 0.040015625, "explore_rd": 0.02818946271766632, "develop_rd": 0.02953090540621088, "equip_value": 0.03709842}, {"project": "DMU17", "oil_output": 0.031525, "explore_rd": 0.032691620776901326, "develop_rd": 0.0346510103117363, "equip_value": 0.035550979999999996}, {"project": "DMU18", "oil_output": 0.033528125, "explore_rd": 0.034321327578508705, "develop_rd": 0.03713894021577158, "equip_value": 0.036486290000000005}, {"project": "DMU19", "oil_output": 0.035196875, "explore_rd": 0.03564890608721536, "develop_rd": 0.03912737676581033, "equip_value": 0.036815339999999995}, {"project": "DMU20", "oil_output": 0.036478125, "explore_rd": 0.03668403036166096, "develop_rd": 0.04055194611670739, "equip_value": 0.03662711}, {"project": "DMU21", "oil_output": 0.037396875, "explore_rd": 0.03750706950439053, "develop_rd": 0.04146569708529534, "equip_value": 0.03610812}, {"project": "DMU22", "oil_output": 0.047, "explore_rd": 0.03516892394701593, "develop_rd": 0.03930142456935089, "equip_value": 0.039109500000000005}, {"project": "DMU23", "oil_output": 0.0386875, "explore_rd": 0.039139008781068615, "develop_rd": 0.042493890445252425, "equip_value": 0.035083800000000005}, {"project": "DMU24", "oil_output": 0.03944375, "explore_rd": 0.04034082452745945, "develop_rd": 0.043100673541157535, "equip_value": 0.035086059999999995}, {"project": "DMU25", "oil_output": 0.0405125, "explore_rd": 0.04203155231433249, "develop_rd": 0.04405912856887405, "equip_value": 0.03569812}, {"project": "DMU26", "oil_output": 0.04198125, "explore_rd": 0.04428858461080518, "develop_rd": 0.04547177683733683, "equip_value": 0.03702446}, {"project": "DMU27", "oil_output": 0.0517875, "explore_rd": 0.04363000446495015, "develop_rd": 0.04427370805269119, "equip_value": 0.043067970000000004}, {"project": "DMU28", "oil_output": 0.045896875, "explore_rd": 0.05017264473880042, "develop_rd": 0.04940573404065089, "equip_value": 0.04175258}, {"project": "DMU29", "oil_output": 0.04798125, "explore_rd": 0.05330480726298557, "develop_rd": 0.05151278536091077, "equip_value": 0.04487881}, {"project": "DMU30", "oil_output": 0.049834375, "explore_rd": 0.056096145259711266, "develop_rd": 0.05334147940633009, "equip_value": 0.048197949999999996}], "2020": [{"project": "DMU01", "oil_output": 0.022127777777777777, "explore_rd": 0.023172078639275458, "develop_rd": 0.023436486884762745, "equip_value": 0.022953187096774196}, {"project": "DMU02", "oil_output": 0.024752777777777776, "explore_rd": 0.02599440394669023, "develop_rd": 0.025637488947833777, "equip_value": 0.025766778494623655}, {"project": "DMU03", "oil_output": 0.026694444444444444, "explore_rd": 0.028130476400854133, "develop_rd": 0.027043324491600348, "equip_value": 0.02795072688172043}, {"project": "DMU04", "oil_output": 0.031775, "explore_rd": 0.027215963478388925, "develop_rd": 0.02572354848216917, "equip_value": 0.03175479569892473}, {"project": "DMU05", "oil_output": 0.027825000000000003, "explore_rd": 0.029585450261394593, "develop_rd": 0.027158856469201294, "equip_value": 0.029736748387096775}, {"project": "DMU06", "oil_output": 0.027072222222222223, "explore_rd": 0.028938958839555263, "develop_rd": 0.026099027409372234, "equip_value": 0.029363105376344085}, {"project": "DMU07", "oil_output": 0.03006388888888889, "explore_rd": 0.025674839849790146, "develop_rd": 0.02293427645151783, "equip_value": 0.030725866666666667}, {"project": "DMU08", "oil_output": 0.024219444444444446, "explore_rd": 0.02616523083719903, "develop_rd": 0.02315590922487474, "equip_value": 0.02723145806451613}, {"project": "DMU09", "oil_output": 0.022841666666666666, "explore_rd": 0.02478830719387379, "develop_rd": 0.021948128499852636, "equip_value": 0.026184972043010755}, {"project": "DMU10", "oil_output": 0.021930555555555554, "explore_rd": 0.023870112657389, "develop_rd": 0.021296787503684054, "equip_value": 0.02560295053763441}, {"project": "DMU11", "oil_output": 0.027644444444444444, "explore_rd": 0.021792209704734555, "develop_rd": 0.01979899793692897, "equip_value": 0.02781715268817204}, {"project": "DMU12", "oil_output": 0.02214722222222222, "explore_rd": 0.024091745821368086, "develop_rd": 0.02227114647804303, "equip_value": 0.026552120430107528}, {"project": "DMU13", "oil_output": 0.023297222222222223, "explore_rd": 0.025224946616596716, "develop_rd": 0.02393044503389331, "equip_value": 0.028059982795698924}, {"project": "DMU14", "oil_output": 0.02499166666666667, "explore_rd": 0.026852956336057728, "develop_rd": 0.0262263483642794, "equip_value": 0.030006460215053765}, {"project": "DMU15", "oil_output": 0.027052777777777776, "explore_rd": 0.028764450335026875, "develop_rd": 0.02895254936634246, "equip_value": 0.032095088172043006}, {"project": "DMU16", "oil_output": 0.03996388888888889, "explore_rd": 0.028120904204403212, "develop_rd": 0.029548482169171823, "equip_value": 0.03707411612903226}, {"project": "DMU17", "oil_output": 0.03146388888888889, "explore_rd": 0.032618363890729696, "develop_rd": 0.034660182729148246, "equip_value": 0.035524120430107525}, {"project": "DMU18", "oil_output": 0.03344722222222222, "explore_rd": 0.03425373683822988, "develop_rd": 0.03713586796345417, "equip_value": 0.03645583655913979}, {"project": "DMU19", "oil_output": 0.035097222222222224, "explore_rd": 0.03559089905014358, "develop_rd": 0.03911170055997642, "equip_value": 0.03678250322580645}, {"project": "DMU20", "oil_output": 0.03636111111111111, "explore_rd": 0.036638686400117804, "develop_rd": 0.04052225169466549, "equip_value": 0.036593152688172044}, {"project": "DMU21", "oil_output": 0.03726944444444444, "explore_rd": 0.03747588542817171, "develop_rd": 0.04142292956086059, "equip_value": 0.03607416774193548}, {"project": "DMU22", "oil_output": 0.046830555555555556, "explore_rd": 0.03515720491863633, "develop_rd": 0.03924845269672856, "equip_value": 0.03907309247311828}, {"project": "DMU23", "oil_output": 0.038544444444444444, "explore_rd": 0.039146601870259916, "develop_rd": 0.04242499263188918, "equip_value": 0.035052266666666665}, {"project": "DMU24", "oil_output": 0.0393, "explore_rd": 0.04037037037037036, "develop_rd": 0.043018567639257294, "equip_value": 0.03505643010752688}, {"project": "DMU25", "oil_output": 0.040369444444444444, "explore_rd": 0.04208600250349753, "develop_rd": 0.043964043619216034, "equip_value": 0.03567070967741936}, {"project": "DMU26", "oil_output": 0.04184444444444444, "explore_rd": 0.04437302113246447, "develop_rd": 0.04536339522546419, "equip_value": 0.036999690322580644}, {"project": "DMU27", "oil_output": 0.05163611111111111, "explore_rd": 0.043739047198291726, "develop_rd": 0.044158561744768635, "equip_value": 0.043044326881720434}, {"project": "DMU28", "oil_output": 0.045783333333333336, "explore_rd": 0.050327663647743166, "develop_rd": 0.049268493958149126, "equip_value": 0.041735569892473116}, {"project": "DMU29", "oil_output": 0.04788611111111111, "explore_rd": 0.0535026875782343, "develop_rd": 0.05136103743000295, "equip_value": 0.04486777634408602}, {"project": "DMU30", "oil_output": 0.04976666666666667, "explore_rd": 0.05633679405051174, "develop_rd": 0.05317771883289124, "equip_value": 0.04819484731182795}], "2021": [{"project": "DMU01", "oil_output": 0.022302380952380952, "explore_rd": 0.023161196207148068, "develop_rd": 0.023541241620518797, "equip_value": 0.02299843393725144}, {"project": "DMU02", "oil_output": 0.024938095238095242, "explore_rd": 0.025969365426695843, "develop_rd": 0.02574817837365199, "equip_value": 0.025810205921343348}, {"project": "DMU03", "oil_output": 0.02687857142857143, "explore_rd": 0.028090444930707514, "develop_rd": 0.027155348294957738, "equip_value": 0.027990122845779935}, {"project": "DMU04", "oil_output": 0.031971428571428574, "explore_rd": 0.027165572574762948, "develop_rd": 0.025825706791023022, "equip_value": 0.031791137428192666}, {"project": "DMU05", "oil_output": 0.02797857142857143, "explore_rd": 0.0295200583515682, "develop_rd": 0.027260856893034098, "equip_value": 0.02976328060097216}, {"project": "DMU06", "oil_output": 0.027202380952380954, "explore_rd": 0.028865791393143693, "develop_rd": 0.02619003206062372, "equip_value": 0.02938229253203712}, {"project": "DMU07", "oil_output": 0.030185714285714288, "explore_rd": 0.025602479941648434, "develop_rd": 0.023009035266686097, "equip_value": 0.03073905435262925}, {"project": "DMU08", "oil_output": 0.024297619047619047, "explore_rd": 0.026086797957695113, "develop_rd": 0.02322471582628971, "equip_value": 0.027237479452054795}, {"project": "DMU09", "oil_output": 0.02289761904761905, "explore_rd": 0.024710430342815462, "develop_rd": 0.02200641212474497, "equip_value": 0.02618574988952718}, {"project": "DMU10", "oil_output": 0.021966666666666666, "explore_rd": 0.0237928519328957, "develop_rd": 0.021347129116875547, "equip_value": 0.025599264692885548}, {"project": "DMU11", "oil_output": 0.027669047619047617, "explore_rd": 0.021721371261852664, "develop_rd": 0.01983969688137569, "equip_value": 0.027808848431285903}, {"project": "DMU12", "oil_output": 0.02215, "explore_rd": 0.0240145878920496, "develop_rd": 0.02230953074905275, "equip_value": 0.02654059920459567}, {"project": "DMU13", "oil_output": 0.023285714285714285, "explore_rd": 0.02514733770970095, "develop_rd": 0.02396385893325561, "equip_value": 0.028044577993813522}, {"project": "DMU14", "oil_output": 0.024964285714285713, "explore_rd": 0.026774617067833698, "develop_rd": 0.026254153308073444, "equip_value": 0.029987153336279278}, {"project": "DMU15", "oil_output": 0.027007142857142858, "explore_rd": 0.028687819110138586, "develop_rd": 0.028972894199941705, "equip_value": 0.03207209544851967}, {"project": "DMU16", "oil_output": 0.03987380952380953, "explore_rd": 0.028053975200583517, "develop_rd": 0.029559895074322353, "equip_value": 0.03704566327883341}, {"project": "DMU17", "oil_output": 0.031380952380952384, "explore_rd": 0.03255215171407732, "develop_rd": 0.03466219761002623, "equip_value": 0.03549583384887318}, {"project": "DMU18", "oil_output": 0.03334761904761905, "explore_rd": 0.03419839533187455, "develop_rd": 0.037126202273389676, "equip_value": 0.036426562969509496}, {"project": "DMU19", "oil_output": 0.03498571428571429, "explore_rd": 0.0355492341356674, "develop_rd": 0.03908889536578257, "equip_value": 0.036753548387096775}, {"project": "DMU20", "oil_output": 0.03624047619047619, "explore_rd": 0.036613420860685635, "develop_rd": 0.04048673856018653, "equip_value": 0.03656574812196199}, {"project": "DMU21", "oil_output": 0.0371452380952381, "explore_rd": 0.037471188913202044, "develop_rd": 0.04137452637714952, "equip_value": 0.036049350419796726}, {"project": "DMU22", "oil_output": 0.046676190476190475, "explore_rd": 0.03517213712618527, "develop_rd": 0.039192072282133485, "equip_value": 0.03904945293857711}, {"project": "DMU23", "oil_output": 0.038426190476190475, "explore_rd": 0.03918526622902991, "develop_rd": 0.04235324978140483, "equip_value": 0.03503473265576668}, {"project": "DMU24", "oil_output": 0.039190476190476185, "explore_rd": 0.04043471918307805, "develop_rd": 0.04293617021276595, "equip_value": 0.03504333009279717}, {"project": "DMU25", "oil_output": 0.040273809523809524, "explore_rd": 0.04217870167760759, "develop_rd": 0.043870591664237825, "equip_value": 0.03566262836942112}, {"project": "DMU26", "oil_output": 0.04176428571428571, "explore_rd": 0.04449744711889132, "develop_rd": 0.04525852521130865, "equip_value": 0.03699750773309766}, {"project": "DMU27", "oil_output": 0.05156666666666666, "explore_rd": 0.04388767323121808, "develop_rd": 0.044049548236665695, "equip_value": 0.04304983473265577}, {"project": "DMU28", "oil_output": 0.04574761904761905, "explore_rd": 0.05052808169219548, "develop_rd": 0.04914019236374234, "equip_value": 0.04174949359257622}, {"project": "DMU29", "oil_output": 0.04788333333333333, "explore_rd": 0.053745441283734506, "develop_rd": 0.051222384144564266, "equip_value": 0.04489276889085285}, {"project": "DMU30", "oil_output": 0.04980238095238095, "explore_rd": 0.05662144420131292, "develop_rd": 0.0530300204022151, "equip_value": 0.048233247901016345}], "2022": [{"project": "DMU01", "oil_output": 0.022452, "explore_rd": 0.023107034522605804, "develop_rd": 0.023649786595916482, "equip_value": 0.023021640586172173}, {"project": "DMU02", "oil_output": 0.025088, "explore_rd": 0.02589773219702441, "develop_rd": 0.02586169108316991, "equip_value": 0.025829827819433406}, {"project": "DMU03", "oil_output": 0.027022, "explore_rd": 0.028003755597284415, "develop_rd": 0.027269004498788788, "equip_value": 0.028004835087365364}, {"project": "DMU04", "oil_output": 0.03212, "explore_rd": 0.02707352303914488, "develop_rd": 0.025927442611604564, "equip_value": 0.03180086603147114}, {"project": "DMU05", "oil_output": 0.028083999999999998, "explore_rd": 0.029413549039433773, "develop_rd": 0.027360710577921332, "equip_value": 0.029766332445691688}, {"project": "DMU06", "oil_output": 0.027286, "explore_rd": 0.02875631951466127, "develop_rd": 0.026278694197715998, "equip_value": 0.02937982580764717}, {"project": "DMU07", "oil_output": 0.030254, "explore_rd": 0.025501950021666907, "develop_rd": 0.0230799400161495, "equip_value": 0.030731304130508827}, {"project": "DMU08", "oil_output": 0.024332, "explore_rd": 0.02598367759641774, "develop_rd": 0.02328930672511247, "equip_value": 0.027226540164037083}, {"project": "DMU09", "oil_output": 0.022914, "explore_rd": 0.024612162357359524, "develop_rd": 0.022060791325412388, "equip_value": 0.0261718428131912}, {"project": "DMU10", "oil_output": 0.021966, "explore_rd": 0.023700707785642063, "develop_rd": 0.02139289422078671, "equip_value": 0.02558287680897835}, {"project": "DMU11", "oil_output": 0.02765, "explore_rd": 0.021640184890943232, "develop_rd": 0.019875418156650133, "equip_value": 0.027788587901740963}, {"project": "DMU12", "oil_output": 0.022122000000000003, "explore_rd": 0.02392965477394193, "develop_rd": 0.022342254008536164, "equip_value": 0.026519490808403715}, {"project": "DMU13", "oil_output": 0.023242, "explore_rd": 0.025065000722230245, "develop_rd": 0.023991233129542048, "equip_value": 0.02802101438228812}, {"project": "DMU14", "oil_output": 0.024908, "explore_rd": 0.026695796619962443, "develop_rd": 0.026275233590956282, "equip_value": 0.029961283032254885}, {"project": "DMU15", "oil_output": 0.026936, "explore_rd": 0.028614040156001733, "develop_rd": 0.028987195754989037, "equip_value": 0.032044422506844326}, {"project": "DMU16", "oil_output": 0.039758, "explore_rd": 0.027993644373826374, "develop_rd": 0.02956454031606875, "equip_value": 0.037014526230008934}, {"project": "DMU17", "oil_output": 0.031284, "explore_rd": 0.03249819442438249, "develop_rd": 0.03465682316299458, "equip_value": 0.03546758162326782}, {"project": "DMU18", "oil_output": 0.03324, "explore_rd": 0.0341586017622418, "develop_rd": 0.03710981658784174, "equip_value": 0.03640001904113168}, {"project": "DMU19", "oil_output": 0.034874, "explore_rd": 0.035527228080312, "develop_rd": 0.03906044526473642, "equip_value": 0.036730042655535165}, {"project": "DMU20", "oil_output": 0.036128, "explore_rd": 0.03661201791131012, "develop_rd": 0.040446418272003695, "equip_value": 0.036546426075923115}, {"project": "DMU21", "oil_output": 0.037038, "explore_rd": 0.03749169435215946, "develop_rd": 0.04132310531779906, "equip_value": 0.03603507535131171}, {"project": "DMU22", "oil_output": 0.046558, "explore_rd": 0.0352123356926188, "develop_rd": 0.03913427154227708, "equip_value": 0.03903996994221357}, {"project": "DMU23", "oil_output": 0.038344, "explore_rd": 0.03925393615484617, "develop_rd": 0.042282270158034374, "equip_value": 0.035032293419305555}, {"project": "DMU24", "oil_output": 0.039126, "explore_rd": 0.04053011700130001, "develop_rd": 0.04285615411235436, "equip_value": 0.035047628330710456}, {"project": "DMU25", "oil_output": 0.040232000000000004, "explore_rd": 0.04230319225769175, "develop_rd": 0.04378186642057908, "equip_value": 0.03567452358918532}, {"project": "DMU26", "oil_output": 0.041748, "explore_rd": 0.04465332948143868, "develop_rd": 0.0451614949821202, "equip_value": 0.03701828345331325}, {"project": "DMU27", "oil_output": 0.051584000000000005, "explore_rd": 0.044065434060378446, "develop_rd": 0.04395028261621871, "equip_value": 0.043084532990744086}, {"project": "DMU28", "oil_output": 0.045798, "explore_rd": 0.050759063989599874, "develop_rd": 0.04902583919713923, "equip_value": 0.04179396928824137}, {"project": "DMU29", "oil_output": 0.047973999999999996, "explore_rd": 0.05401560017333526, "develop_rd": 0.05110104971738378, "equip_value": 0.044952853364584974}, {"project": "DMU30", "oil_output": 0.049938, "explore_rd": 0.05693052145023833, "develop_rd": 0.052904025839197136, "equip_value": 0.048311584318494666}], "2023": [{"project": "DMU01", "oil_output": 0.022561904761904762, "explore_rd": 0.02301315037164094, "develop_rd": 0.02375757922434504, "equip_value": 0.02302131816763256}, {"project": "DMU02", "oil_output": 0.02519206349206349, "explore_rd": 0.025786163522012583, "develop_rd": 0.02597357281775541, "equip_value": 0.025824337157756623}, {"project": "DMU03", "oil_output": 0.02711269841269841, "explore_rd": 0.02787664379645512, "develop_rd": 0.027379590435876903, "equip_value": 0.027993801112091734}, {"project": "DMU04", "oil_output": 0.03220158730158731, "explore_rd": 0.026946826758147514, "develop_rd": 0.02602505434160851, "equip_value": 0.03178315972979594}, {"project": "DMU05", "oil_output": 0.028134920634920634, "explore_rd": 0.029273156089193824, "develop_rd": 0.02745624070472486, "equip_value": 0.029745479820266648}, {"project": "DMU06", "oil_output": 0.02731269841269841, "explore_rd": 0.028618496283590623, "develop_rd": 0.026361972314380505, "equip_value": 0.02935560592891875}, {"project": "DMU07", "oil_output": 0.030261904761904764, "explore_rd": 0.02538093196112064, "develop_rd": 0.02314609312435648, "equip_value": 0.030702796504662802}, {"project": "DMU08", "oil_output": 0.02432222222222222, "explore_rd": 0.025862635791881076, "develop_rd": 0.023348015101246997, "equip_value": 0.027199048983714603}, {"project": "DMU09", "oil_output": 0.02289047619047619, "explore_rd": 0.024501858204688396, "develop_rd": 0.022109026427182245, "equip_value": 0.026143832823820375}, {"project": "DMU10", "oil_output": 0.02193015873015873, "explore_rd": 0.02359991423670669, "develop_rd": 0.021432902413911454, "equip_value": 0.025554510615878684}, {"project": "DMU11", "oil_output": 0.02758888888888889, "explore_rd": 0.021554459691252144, "develop_rd": 0.019905617206269308, "equip_value": 0.027757322221364646}, {"project": "DMU12", "oil_output": 0.022065079365079364, "explore_rd": 0.02384291023441967, "develop_rd": 0.022369294131106283, "equip_value": 0.026489817850515275}, {"project": "DMU13", "oil_output": 0.023173015873015873, "explore_rd": 0.02498427672955975, "develop_rd": 0.024011554742020366, "equip_value": 0.027990470541649753}, {"project": "DMU14", "oil_output": 0.024826984126984128, "explore_rd": 0.026622355631789597, "develop_rd": 0.02628989818098616, "equip_value": 0.029930158692872747}, {"project": "DMU15", "oil_output": 0.026844444444444445, "explore_rd": 0.028548456260720414, "develop_rd": 0.028993822217137626, "equip_value": 0.03201348503508425}, {"project": "DMU16", "oil_output": 0.039620634920634924, "explore_rd": 0.02794525443110349, "develop_rd": 0.0295624070472486, "equip_value": 0.03698232700329198}, {"project": "DMU17", "oil_output": 0.031179365079365078, "explore_rd": 0.03245926243567753, "develop_rd": 0.03464477748541357, "equip_value": 0.03544088531092595}, {"project": "DMU18", "oil_output": 0.033133333333333334, "explore_rd": 0.03413807890222985, "develop_rd": 0.0370867177668459, "equip_value": 0.036377656486474695}, {"project": "DMU19", "oil_output": 0.03477142857142857, "explore_rd": 0.035527444253859355, "develop_rd": 0.0390269991991763, "equip_value": 0.036713314227995585}, {"project": "DMU20", "oil_output": 0.03603650793650794, "explore_rd": 0.03663379073756433, "develop_rd": 0.04040212790298593, "equip_value": 0.03653631160716383}, {"project": "DMU21", "oil_output": 0.036958730158730156, "explore_rd": 0.03753644939965695, "develop_rd": 0.04126930557144491, "equip_value": 0.03603222515662909}, {"project": "DMU22", "oil_output": 0.04648412698412699, "explore_rd": 0.035275157232704406, "develop_rd": 0.03907676467223429, "equip_value": 0.03904530498629181}, {"project": "DMU23", "oil_output": 0.038306349206349205, "explore_rd": 0.03934748427672956, "develop_rd": 0.04221313350875186, "equip_value": 0.03504523954939144}, {"project": "DMU24", "oil_output": 0.03911428571428571, "explore_rd": 0.04064894225271584, "develop_rd": 0.042781146321931134, "equip_value": 0.03506929599962416}, {"project": "DMU25", "oil_output": 0.04024920634920635, "explore_rd": 0.04244925671812465, "develop_rd": 0.043700949548106625, "equip_value": 0.03570597187220006}, {"project": "DMU26", "oil_output": 0.0418, "explore_rd": 0.044829902801600915, "develop_rd": 0.04507493421805286, "equip_value": 0.03706116588422031}, {"project": "DMU27", "oil_output": 0.05168730158730159, "explore_rd": 0.04425957690108634, "develop_rd": 0.04386454639057316, "equip_value": 0.04314688151222999}, {"project": "DMU28", "oil_output": 0.04592857142857143, "explore_rd": 0.0510027158376215, "develop_rd": 0.0489297563207871, "equip_value": 0.04186695671432934}, {"project": "DMU29", "oil_output": 0.04815079365079365, "explore_rd": 0.05429388221841053, "develop_rd": 0.05100217366434046, "equip_value": 0.04504521857602593}, {"project": "DMU30", "oil_output": 0.05016031746031746, "explore_rd": 0.057240566037735856, "develop_rd": 0.05280402699919917, "equip_value": 0.04842609992718048}], "2024": [{"project": "DMU01", "oil_output": 0.022619999999999998, "explore_rd": 0.02288718929254302, "develop_rd": 0.023861763201273235, "equip_value": 0.022997239829072508}, {"project": "DMU02", "oil_output": 0.02523789473684211, "explore_rd": 0.02564195170313717, "develop_rd": 0.02607969078610811, "equip_value": 0.025793764227317592}, {"project": "DMU03", "oil_output": 0.02714, "explore_rd": 0.027719000070816513, "develop_rd": 0.027483658273176833, "equip_value": 0.027957359409855144}, {"project": "DMU04", "oil_output": 0.032210526315789474, "explore_rd": 0.026794844557750868, "develop_rd": 0.026116068891036206, "equip_value": 0.031738695451252005}, {"project": "DMU05", "oil_output": 0.028122105263157896, "explore_rd": 0.029109836413851706, "develop_rd": 0.027542772693684988, "equip_value": 0.029701604869950195}, {"project": "DMU06", "oil_output": 0.027281052631578945, "explore_rd": 0.028462573472133698, "develop_rd": 0.026437219348604556, "equip_value": 0.029310714917360325}, {"project": "DMU07", "oil_output": 0.03020842105263158, "explore_rd": 0.025247503717867003, "develop_rd": 0.02320354686523049, "equip_value": 0.03065485996611117}, {"project": "DMU08", "oil_output": 0.024265263157894738, "explore_rd": 0.025733305006727568, "develop_rd": 0.023398510771329508, "equip_value": 0.027156314219045064}, {"project": "DMU09", "oil_output": 0.022825263157894737, "explore_rd": 0.024387791232915516, "develop_rd": 0.022149718638094694, "equip_value": 0.026103083655201136}, {"project": "DMU10", "oil_output": 0.021858947368421054, "explore_rd": 0.023498335811911335, "develop_rd": 0.02146478713124538, "equip_value": 0.025515579162364}, {"project": "DMU11", "oil_output": 0.02749263157894737, "explore_rd": 0.021470859004319803, "develop_rd": 0.01992894901381231, "equip_value": 0.027716634622516105}, {"project": "DMU12", "oil_output": 0.021983157894736843, "explore_rd": 0.023761773245520854, "develop_rd": 0.022387881543795826, "equip_value": 0.026453101626549673}, {"project": "DMU13", "oil_output": 0.023085263157894734, "explore_rd": 0.024911833439558103, "develop_rd": 0.024024896265560165, "equip_value": 0.027954520507305496}, {"project": "DMU14", "oil_output": 0.02473263157894737, "explore_rd": 0.0265590255647617, "develop_rd": 0.02629625419200818, "equip_value": 0.029895403328407854}, {"project": "DMU15", "oil_output": 0.02674421052631579, "explore_rd": 0.028497981729339282, "develop_rd": 0.028992781219803327, "equip_value": 0.03198092869083005}, {"project": "DMU16", "oil_output": 0.03948105263157895, "explore_rd": 0.027911620990014867, "develop_rd": 0.029553799806741315, "equip_value": 0.036950801864456095}, {"project": "DMU17", "oil_output": 0.031077894736842103, "explore_rd": 0.032439628921464486, "develop_rd": 0.03462570340476326, "equip_value": 0.035417203429960235}, {"project": "DMU18", "oil_output": 0.03304, "explore_rd": 0.034137808937044115, "develop_rd": 0.0370584891718297, "equip_value": 0.03636072547196184}, {"project": "DMU19", "oil_output": 0.03468842105263158, "explore_rd": 0.03554847390411444, "develop_rd": 0.03898937077246632, "equip_value": 0.03670433080973762}, {"project": "DMU20", "oil_output": 0.035970526315789474, "explore_rd": 0.03667728914382834, "develop_rd": 0.04035639174671744, "equip_value": 0.036536043678934725}, {"project": "DMU21", "oil_output": 0.036915789473684214, "explore_rd": 0.0376021528220381, "develop_rd": 0.04121639288353322, "equip_value": 0.036041072803929736}, {"project": "DMU22", "oil_output": 0.04646315789473684, "explore_rd": 0.035356561150060195, "develop_rd": 0.039021201614278404, "equip_value": 0.039065327848744}, {"project": "DMU23", "oil_output": 0.038317894736842106, "explore_rd": 0.03945825366475461, "develop_rd": 0.0421497186380947, "equip_value": 0.03507302757318333}, {"project": "DMU24", "oil_output": 0.03915684210526316, "explore_rd": 0.04078252248424332, "develop_rd": 0.04271357926448019, "equip_value": 0.0351073363038356}, {"project": "DMU25", "oil_output": 0.04032631578947368, "explore_rd": 0.04260675589547482, "develop_rd": 0.04363098959813562, "equip_value": 0.035755484684417416}, {"project": "DMU26", "oil_output": 0.04191263157894737, "explore_rd": 0.045013101055166066, "develop_rd": 0.045001989427613256, "equip_value": 0.03712405935679688}, {"project": "DMU27", "oil_output": 0.05187052631578947, "explore_rd": 0.044454358756462004, "develop_rd": 0.04379525947820155, "equip_value": 0.04323379526355125}, {"project": "DMU28", "oil_output": 0.04612631578947368, "explore_rd": 0.05124141349762764, "develop_rd": 0.04885522651054397, "equip_value": 0.04196480582385797}, {"project": "DMU29", "oil_output": 0.04839473684210526, "explore_rd": 0.05455845903264641, "develop_rd": 0.050928778491445455, "equip_value": 0.04516519605885474}, {"project": "DMU30", "oil_output": 0.05045052631578947, "explore_rd": 0.057527795481906376, "develop_rd": 0.052734610356391744, "equip_value": 0.048570984544640254}], "2025": [{"project": "DMU01", "oil_output": 0.02262185430463576, "explore_rd": 0.022738271083913627, "develop_rd": 0.02395821569734613, "equip_value": 0.02295051389844752}, {"project": "DMU02", "oil_output": 0.025220529801324502, "explore_rd": 0.025475838784553707, "develop_rd": 0.026176736307171093, "equip_value": 0.025739555528716204}, {"project": "DMU03", "oil_output": 0.02710264900662251, "explore_rd": 0.027542378842231135, "develop_rd": 0.027577075098814227, "equip_value": 0.027897264965630008}, {"project": "DMU04", "oil_output": 0.03214437086092715, "explore_rd": 0.026627980586621653, "develop_rd": 0.02619593450028233, "equip_value": 0.03166965428018875}, {"project": "DMU05", "oil_output": 0.02804701986754967, "explore_rd": 0.02893507772385173, "develop_rd": 0.027618294748729535, "equip_value": 0.029636892451581867}, {"project": "DMU06", "oil_output": 0.027194701986754964, "explore_rd": 0.02829992262783991, "develop_rd": 0.026500282326369282, "equip_value": 0.029247414080226304}, {"project": "DMU07", "oil_output": 0.030098675496688744, "explore_rd": 0.025112893015404095, "develop_rd": 0.023251835121400336, "equip_value": 0.030589929018004697}, {"project": "DMU08", "oil_output": 0.024168874172185432, "explore_rd": 0.02560596469015967, "develop_rd": 0.023439299830604176, "equip_value": 0.027100528307247677}, {"project": "DMU09", "oil_output": 0.022728476821192053, "explore_rd": 0.024277273686431736, "develop_rd": 0.02218068887634105, "equip_value": 0.026051707636594673}, {"project": "DMU10", "oil_output": 0.021762251655629138, "explore_rd": 0.02340367166068791, "develop_rd": 0.021488424618859404, "equip_value": 0.025468110161206193}, {"project": "DMU11", "oil_output": 0.02736887417218543, "explore_rd": 0.02139551241471478, "develop_rd": 0.019944664031620554, "equip_value": 0.027668651506364574}, {"project": "DMU12", "oil_output": 0.0218841059602649, "explore_rd": 0.023691355419568124, "develop_rd": 0.022399209486166007, "equip_value": 0.026411275166667192}, {"project": "DMU13", "oil_output": 0.02298476821192053, "explore_rd": 0.02485264120419217, "develop_rd": 0.024029926595143986, "equip_value": 0.02791507611675721}, {"project": "DMU14", "oil_output": 0.02463046357615894, "explore_rd": 0.026511922346486604, "develop_rd": 0.026294748729531338, "equip_value": 0.02985888399417725}, {"project": "DMU15", "oil_output": 0.026643046357615895, "explore_rd": 0.028463810930576077, "develop_rd": 0.028984189723320158, "equip_value": 0.031948510548849764}, {"project": "DMU16", "oil_output": 0.039348344370860926, "explore_rd": 0.027895477245551102, "develop_rd": 0.02953867871259176, "equip_value": 0.03692167524311307}, {"project": "DMU17", "oil_output": 0.030989403973509935, "explore_rd": 0.032440036575930226, "develop_rd": 0.03460135516657255, "equip_value": 0.035397847738257986}, {"project": "DMU18", "oil_output": 0.03296556291390729, "explore_rd": 0.034158401913202505, "develop_rd": 0.03702540937323546, "equip_value": 0.03635019828151776}, {"project": "DMU19", "oil_output": 0.03463443708609271, "explore_rd": 0.03558978687486812, "develop_rd": 0.03894861660079051, "equip_value": 0.03670364828969104}, {"project": "DMU20", "oil_output": 0.03594039735099337, "explore_rd": 0.036739115143841886, "develop_rd": 0.040309994353472614, "equip_value": 0.03654572182420153}, {"project": "DMU21", "oil_output": 0.036913245033112586, "explore_rd": 0.03768446226348737, "develop_rd": 0.04116487859966121, "equip_value": 0.03606123907814683}, {"project": "DMU22", "oil_output": 0.04649668874172185, "explore_rd": 0.03544981360343251, "develop_rd": 0.03897063805759458, "equip_value": 0.03909907342911975}, {"project": "DMU23", "oil_output": 0.03837748344370861, "explore_rd": 0.03957797003587255, "develop_rd": 0.04209373235460192, "equip_value": 0.03511428070008606}, {"project": "DMU24", "oil_output": 0.039249006622516555, "explore_rd": 0.040920728705071394, "develop_rd": 0.042656691134952004, "equip_value": 0.03515982430865813}, {"project": "DMU25", "oil_output": 0.04045364238410595, "explore_rd": 0.04276429626503482, "develop_rd": 0.04357368718238284, "equip_value": 0.03582051783064437}, {"project": "DMU26", "oil_output": 0.042078145695364236, "explore_rd": 0.045190265175494126, "develop_rd": 0.044946357989836254, "equip_value": 0.037203717528285156}, {"project": "DMU27", "oil_output": 0.052113245033112585, "explore_rd": 0.044636702539213625, "develop_rd": 0.04374477696216827, "equip_value": 0.043340762744384184}, {"project": "DMU28", "oil_output": 0.04637483443708609, "explore_rd": 0.05145670675951326, "develop_rd": 0.048804630152456244, "equip_value": 0.04208240769373242}, {"project": "DMU29", "oil_output": 0.048684768211920526, "explore_rd": 0.054790743476120146, "develop_rd": 0.05088368153585545, "equip_value": 0.04530650138251599}, {"project": "DMU30", "oil_output": 0.050780132450331125, "explore_rd": 0.05777097840613351, "develop_rd": 0.05269734613212874, "equip_value": 0.048738616266985876}]};
+const AVAILABLE_FIELDS = [
+  {key:'oil_output', label:'原油产量（万吨）'},
+  {key:'explore_rd', label:'勘探阶段科研投资（万元）'},
+  {key:'develop_rd', label:'开发阶段科研投资（万元）'},
+  {key:'rd_total', label:'科研总投资（万元）'},
+  {key:'equip_value', label:'投入设备价值（万元）'},
+  {key:'develop_invest_ref', label:'开发投资额（万元）'},
+  {key:'total_invest', label:'勘探开发投资额（万元）'},
+  {key:'input_staff', label:'投入人员数（人）'},
+  {key:'active_wells', label:'在产井数（口）'},
+  {key:'recoverable_reserve', label:'可采储量（万吨）'},
+  {key:'new_reserve', label:'新增探明储量（万吨）'},
+  {key:'operating_cost', label:'营运成本（万元）'},
+  {key:'profit', label:'利润（万元）'},
+  {key:'net_profit', label:'净利润（万元）'},
+  {key:'cost_per_ton', label:'单位油气成本（元/吨）'},
+  {key:'custom_a', label:'自定义指标1'},
+  {key:'custom_b', label:'自定义指标2'}
+];
+const DEFAULT_INDICATORS = [
+  {key:'oil_output', label:'原油产量（万吨）', role:'output', custom:false},
+  {key:'explore_rd', label:'勘探阶段科研投资（万元）', role:'input', custom:false},
+  {key:'develop_rd', label:'开发阶段科研投资（万元）', role:'input', custom:false},
+  {key:'equip_value', label:'投入设备价值（万元）', role:'input', custom:false},
+  {key:'develop_invest_ref', label:'开发投资额（万元）', role:'ignore', custom:false}
+];
+let indicators = JSON.parse(JSON.stringify(DEFAULT_INDICATORS));
+let panelRows = [];
+let currentResult = null;
+let customIndicatorSeed = 0;
+
+function num(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+function pos(v){ return Math.max(1e-10, num(v)); }
+function uniq(arr){ return [...new Set(arr)]; }
+function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : NaN; }
+function avgFinite(arr){ const v=arr.filter(x=>Number.isFinite(x)); return v.length?avg(v):NaN; }
+function fmt(v,d=4){ return Number.isFinite(v)?Number(v).toFixed(d):'--'; }
+function fmt2(v,d=2){ return Number.isFinite(v)?Number(v).toFixed(d):'--'; }
+function pct(v,d=2){ return Number.isFinite(v)?Number(v).toFixed(d)+'%':'--'; }
+function safeDiv(a,b){ return (!Number.isFinite(a)||!Number.isFinite(b))?NaN:a/Math.max(Math.abs(b),1e-10); }
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+function esc(v){ return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fieldLabelByKey(key){ const hit=AVAILABLE_FIELDS.find(x=>x.key===key); return hit?hit.label:key; }
+function activeInputs(){ return indicators.filter(x=>x.role==='input').map(x=>x.key); }
+function activeOutputs(){ return indicators.filter(x=>x.role==='output').map(x=>x.key); }
+function indicatorLabel(key){ const it=indicators.find(x=>x.key===key); return it?it.label:fieldLabelByKey(key); }
+function isEditableCustomKey(key){ return /^custom_/.test(String(key || '')); }
+function defaultCustomLabel(key, idx=0){
+  const preset = fieldLabelByKey(key);
+  return isEditableCustomKey(key) ? preset : `自定义指标${idx+1}`;
+}
+function nextCustomIndicatorKey(){
+  let key='';
+  do { customIndicatorSeed += 1; key = `custom_user_${customIndicatorSeed}`; }
+  while(indicators.some(x=>x.key===key) || AVAILABLE_FIELDS.some(x=>x.key===key));
+  return key;
+}
+function ensureIndicatorFieldOnRows(key, defaultValue=0){
+  panelRows.forEach(row=>{ if(!(key in row)) row[key] = defaultValue; });
+}
+
+function buildDefaultPanel(){
+  const panel = [];
+  DEFAULT_TOTALS.forEach(row=>{
+    const yr = String(row.year);
+    const shares = BASE_SHARES[yr] || [];
+    shares.forEach((base, idx)=>{
+      const rec = {project: base.project, year: row.year};
+      rec.oil_output = +(row.oil_output * num(base.oil_output)).toFixed(6);
+      rec.explore_rd = +(row.explore_rd * num(base.explore_rd)).toFixed(6);
+      rec.develop_rd = +(row.develop_rd * num(base.develop_rd)).toFixed(6);
+      rec.equip_value = +(row.equip_value * num(base.equip_value)).toFixed(6);
+      rec.develop_invest_ref = +(row.develop_invest_ref * num(base.equip_value)).toFixed(6);
+      rec.rd_total = +(rec.explore_rd + rec.develop_rd).toFixed(6);
+      rec.total_invest = +(rec.develop_invest_ref + rec.equip_value).toFixed(6);
+      rec.input_staff = Math.max(1, Math.round(rec.oil_output * 2.4 + (idx%3===0?1:0)));
+      rec.active_wells = Math.max(1, Math.round(rec.oil_output * 1.3));
+      rec.recoverable_reserve = +(rec.oil_output * (5.0 + (idx%5)*0.15)).toFixed(6);
+      rec.new_reserve = +(rec.oil_output * (0.72 + (idx%4)*0.03)).toFixed(6);
+      rec.operating_cost = +(rec.oil_output * 2200).toFixed(6);
+      rec.profit = +(rec.oil_output * 850).toFixed(6);
+      rec.net_profit = +(rec.profit * 0.84).toFixed(6);
+      rec.cost_per_ton = +(rec.operating_cost / Math.max(rec.oil_output,1e-10)).toFixed(6);
+      rec.custom_a = 0; rec.custom_b = 0;
+      panel.push(rec);
+    });
+    // last row exact adjustment for key defaults
+    const yearRows = panel.filter(r=>r.year===row.year);
+    if(yearRows.length){
+      const last = yearRows[yearRows.length-1];
+      ['oil_output','explore_rd','develop_rd','equip_value','develop_invest_ref'].forEach(k=>{
+        const target = num(row[k]);
+        const current = yearRows.slice(0,-1).reduce((s,r)=>s+num(r[k]),0);
+        last[k] = +(target-current).toFixed(6);
+      });
+      last.rd_total = +(last.explore_rd + last.develop_rd).toFixed(6);
+      last.total_invest = +(last.develop_invest_ref + last.equip_value).toFixed(6);
+      last.recoverable_reserve = +(last.oil_output * (5.0 + ((yearRows.length-1)%5)*0.15)).toFixed(6);
+      last.new_reserve = +(last.oil_output * (0.72 + ((yearRows.length-1)%4)*0.03)).toFixed(6);
+      last.operating_cost = +(last.oil_output * 2200).toFixed(6);
+      last.profit = +(last.oil_output * 850).toFixed(6);
+      last.net_profit = +(last.profit * 0.84).toFixed(6);
+      last.cost_per_ton = +(last.operating_cost / Math.max(last.oil_output,1e-10)).toFixed(6);
+      last.input_staff = Math.max(1, Math.round(last.oil_output * 2.4));
+      last.active_wells = Math.max(1, Math.round(last.oil_output * 1.3));
+    }
+  });
+  return panel;
+}
+
+function sortPanel(){ panelRows.sort((a,b)=> a.year===b.year ? String(a.project).localeCompare(String(b.project),'zh-CN') : a.year-b.year); }
+
+function renderIndicatorTable(){
+  let html = '<thead><tr><th>指标名称</th><th>角色</th><th>操作</th></tr></thead><tbody>';
+  indicators.forEach((it,idx)=>{
+    const options = AVAILABLE_FIELDS.map(f=>`<option value="${f.key}" ${it.key===f.key?'selected':''}>${esc(f.label)}</option>`).join('');
+    const editable = isEditableCustomKey(it.key) || it.custom;
+    const nameCell = editable
+      ? `<div style="display:flex;flex-direction:column;gap:6px"><input class="name" value="${esc(it.label)}" placeholder="请输入自定义指标名称" onchange="updateIndicatorLabel(${idx}, this.value)"><span class="small">自定义指标</span></div>`
+      : `<div style="display:flex;flex-direction:column;gap:6px"><select onchange="updateIndicatorKey(${idx}, this.value)">${options}</select><span class="small">预设指标</span></div>`;
+    html += `<tr>
+      <td>${nameCell}</td>
+      <td><select onchange="updateIndicatorRole(${idx}, this.value)"><option value="ignore" ${it.role==='ignore'?'selected':''}>不参与</option><option value="input" ${it.role==='input'?'selected':''}>投入</option><option value="output" ${it.role==='output'?'selected':''}>产出</option></select></td>
+      <td><button class="light" style="height:32px;padding:0 10px" onclick="removeIndicator(${idx})">删除</button></td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('indicatorTable').innerHTML = html;
+}
+function updateIndicatorKey(idx,val){
+  if(indicators.some((x,i)=>i!==idx && x.key===val)){ alert('同一个指标只能选择一次。'); renderIndicatorTable(); return; }
+  indicators[idx].key = val;
+  indicators[idx].label = fieldLabelByKey(val);
+  indicators[idx].custom = isEditableCustomKey(val);
+  ensureIndicatorFieldOnRows(val, 0);
+  renderIndicatorTable(); renderDataTable(); recalcAll();
+}
+function updateIndicatorLabel(idx,val){
+  const text = String(val || '').trim();
+  indicators[idx].label = text || defaultCustomLabel(indicators[idx].key, idx);
+  renderIndicatorTable(); renderDataTable(); recalcAll();
+}
+function updateIndicatorRole(idx,val){ indicators[idx].role = val; renderIndicatorTable(); renderDataTable(); recalcAll(); }
+function addPresetIndicator(){
+  const remain = AVAILABLE_FIELDS.find(f=>!indicators.some(x=>x.key===f.key));
+  if(!remain){ alert('预设指标已全部加入，可直接新增自定义指标。'); return; }
+  indicators.push({key:remain.key,label:remain.label,role:'ignore',custom:false});
+  ensureIndicatorFieldOnRows(remain.key, 0);
+  renderIndicatorTable(); renderDataTable(); recalcAll();
+}
+function addCustomIndicator(){
+  const key = nextCustomIndicatorKey();
+  indicators.push({key,label:`自定义指标${customIndicatorSeed}`,role:'ignore',custom:true});
+  ensureIndicatorFieldOnRows(key, 0);
+  renderIndicatorTable(); renderDataTable(); recalcAll();
+}
+function removeIndicator(idx){
+  if(indicators.length<=1){ alert('至少保留一个指标。'); return; }
+  indicators.splice(idx,1);
+  renderIndicatorTable(); renderDataTable(); recalcAll();
+}
+function resetIndicators(){ indicators = clone(DEFAULT_INDICATORS); renderIndicatorTable(); renderDataTable(); recalcAll(); }
+
+function renderDataTable(){
+  sortPanel();
+  let html = '<thead><tr><th>项目</th><th>年份</th>' + indicators.map(x=>`<th>${esc(x.label)}<br><span class="pill">${x.role==='ignore'?'不参与':x.role==='input'?'投入':'产出'}</span></th>`).join('') + '<th>操作</th></tr></thead><tbody>';
+  panelRows.forEach((row,idx)=>{
+    html += `<tr><td><input class="code" value="${esc(row.project)}" onchange="updatePanelField(${idx}, 'project', this.value)"></td><td><input type="number" step="1" value="${row.year}" onchange="updatePanelField(${idx}, 'year', this.value)"></td>`;
+    indicators.forEach(it=>{
+      html += `<td><input type="number" step="any" value="${row[it.key] ?? 0}" onchange="updatePanelField(${idx}, '${it.key}', this.value)"></td>`;
+    });
+    html += `<td><button class="light" style="height:32px;padding:0 10px" onclick="removeDataRow(${idx})">删除</button></td></tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('dataTable').innerHTML = html;
+}
+function updatePanelField(idx,key,val){
+  if(key==='project') panelRows[idx][key] = String(val).trim() || 'DMU';
+  else if(key==='year') panelRows[idx][key] = Math.round(num(val));
+  else panelRows[idx][key] = num(val);
+  if(key==='explore_rd' || key==='develop_rd') panelRows[idx].rd_total = +(num(panelRows[idx].explore_rd)+num(panelRows[idx].develop_rd)).toFixed(6);
+  if(key==='develop_invest_ref' || key==='equip_value') panelRows[idx].total_invest = +(num(panelRows[idx].develop_invest_ref)+num(panelRows[idx].equip_value)).toFixed(6);
+  if(key==='operating_cost' || key==='oil_output') panelRows[idx].cost_per_ton = +(num(panelRows[idx].operating_cost)/Math.max(num(panelRows[idx].oil_output),1e-10)).toFixed(6);
+  recalcAll(false);
+}
+function addDataRow(){
+  const last = panelRows[panelRows.length-1] || {project:'DMU01',year:2019};
+  const next = clone(last);
+  next.project = last.project || 'DMU01';
+  next.year = num(last.year) || 2019;
+  panelRows.push(next);
+  renderDataTable();
+}
+function removeDataRow(idx){ if(panelRows.length<=2){alert('至少保留两行数据。'); return;} panelRows.splice(idx,1); renderDataTable(); recalcAll(); }
+function deleteLastDataRow(){ if(panelRows.length<=2){alert('至少保留两行数据。'); return;} panelRows.pop(); renderDataTable(); recalcAll(); }
+
+function renderSummaryTable(){
+  const years = uniq(panelRows.map(r=>r.year)).sort((a,b)=>a-b);
+  let html = '<thead><tr><th>年份</th><th>DMU数</th>' + indicators.map(x=>`<th>${esc(x.label)}</th>`).join('') + '</tr></thead><tbody>';
+  years.forEach(y=>{
+    const rowsY = panelRows.filter(r=>r.year===y);
+    html += `<tr><td>${y}</td><td>${rowsY.length}</td>`;
+    indicators.forEach(it=>{
+      const s = rowsY.reduce((sum,r)=>sum+num(r[it.key]),0);
+      html += `<td>${fmt2(s,2)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('summaryTable').innerHTML = html;
+}
+
+function simplexMax(A,b,c){
+  const m=A.length, n=c.length;
+  const width=n+m+1;
+  const T=Array.from({length:m+1},()=>Array(width).fill(0));
+  const basis=[];
+  for(let i=0;i<m;i++){
+    const bi = Number.isFinite(b[i]) ? b[i] : 0;
+    if (bi < -1e-9) return {ok:false};
+    for(let j=0;j<n;j++) T[i][j]=A[i][j]||0;
+    T[i][n+i]=1; T[i][width-1]=bi; basis[i]=n+i;
+  }
+  for(let j=0;j<n;j++) T[m][j]=-(c[j]||0);
+  const tol=1e-9;
+  for(let iter=0; iter<2000; iter++){
+    let pc=-1,minVal=-tol;
+    for(let j=0;j<width-1;j++) if(T[m][j]<minVal){minVal=T[m][j];pc=j;}
+    if(pc===-1){
+      const x=Array(n).fill(0);
+      for(let i=0;i<m;i++) if(basis[i]<n) x[basis[i]]=T[i][width-1];
+      return {ok:true,x,obj:T[m][width-1]};
+    }
+    let pr=-1,bestRatio=Infinity;
+    for(let i=0;i<m;i++){
+      const a=T[i][pc];
+      if(a>tol){
+        const ratio=T[i][width-1]/a;
+        if(ratio<bestRatio-tol || (Math.abs(ratio-bestRatio)<=tol && basis[i]>(basis[pr]??Infinity))){bestRatio=ratio;pr=i;}
+      }
+    }
+    if(pr===-1) return {ok:false};
+    const piv=T[pr][pc];
+    for(let j=0;j<width;j++) T[pr][j]/=piv;
+    for(let i=0;i<m+1;i++){
+      if(i===pr) continue;
+      const factor=T[i][pc]; if(Math.abs(factor)<=tol) continue;
+      for(let j=0;j<width;j++) T[i][j]-=factor*T[pr][j];
+    }
+    basis[pr]=pc;
+  }
+  return {ok:false};
+}
+function deaMultiplier(target, peers, inputs, outputs, rts='CRS'){
+  const n=peers.length, m=inputs.length, s=outputs.length;
+  if(!target || !n || !m || !s) return NaN;
+  if(n<=1) return 1;
+  const x0=inputs.map(k=>pos(target[k]));
+  const y0=outputs.map(k=>pos(target[k]));
+  const extra = rts==='VRS' ? 2 : 0;
+  const pIdx=s+m, nIdx=s+m+1, varCount=s+m+extra;
+  const A=[], b=[];
+  for(let j=0;j<n;j++){
+    const row=Array(varCount).fill(0);
+    for(let r=0;r<s;r++) row[r]=pos(peers[j][outputs[r]]);
+    for(let i=0;i<m;i++) row[s+i]=-pos(peers[j][inputs[i]]);
+    if(rts==='VRS'){ row[pIdx]=1; row[nIdx]=-1; }
+    A.push(row); b.push(0);
+  }
+  const normRow=Array(varCount).fill(0);
+  for(let i=0;i<m;i++) normRow[s+i]=pos(x0[i]);
+  A.push(normRow); b.push(1);
+  const c=Array(varCount).fill(0);
+  for(let r=0;r<s;r++) c[r]=pos(y0[r]);
+  if(rts==='VRS'){ c[pIdx]=1; c[nIdx]=-1; }
+  const sol=simplexMax(A,b,c);
+  if(!sol.ok || !Number.isFinite(sol.obj)) return NaN;
+  return Math.max(1e-10, sol.obj);
+}
+function buildRowLookup(rows){ const map=new Map(); rows.forEach(r=>map.set(`${r.project}__${r.year}`,r)); return map; }
+function computeMalmquist(panel){
+  const inputs=activeInputs(), outputs=activeOutputs();
+  if(inputs.length<1) return {error:'请至少选择1个投入指标。'};
+  if(outputs.length!==1) return {error:'请恰好选择1个产出指标。'};
+  const years=uniq(panel.map(r=>r.year)).sort((a,b)=>a-b);
+  const projects=uniq(panel.map(r=>r.project)).sort();
+  const rowLookup=buildRowLookup(panel);
+  const frontierByYear = new Map(years.map(y=>[y,panel.filter(r=>r.year===y)]));
+  const effCache = new Map();
+  const getEff=(target,frontierYear,rts='CRS')=>{
+    const key=`${rts}__${frontierYear}__${target.project}__${target.year}__${inputs.join('|')}__${outputs.join('|')}`;
+    if(effCache.has(key)) return effCache.get(key);
+    const val=deaMultiplier(target, frontierByYear.get(frontierYear)||[], inputs, outputs, rts);
+    effCache.set(key,val); return val;
+  };
+  const resultRows=[];
+  const outputKey=outputs[0];
+  const efficiencyRows=[];
+  years.forEach(y=>{
+    projects.forEach(project=>{
+      const row = rowLookup.get(`${project}__${y}`);
+      if(!row) return;
+      let hit = efficiencyRows.find(d=>d.project===project);
+      if(!hit){ hit = {project}; efficiencyRows.push(hit); }
+      hit[String(y)] = getEff(row,y,'CRS');
+    });
+  });
+  efficiencyRows.forEach(r=>{ r.avg = avgFinite(years.map(y=>r[String(y)])); });
+  const efficiencyAvgRow = {avg: avgFinite(efficiencyRows.map(r=>r.avg))};
+  years.forEach(y=>{ efficiencyAvgRow[String(y)] = avgFinite(efficiencyRows.map(r=>r[String(y)])); });
+  for(let i=1;i<years.length;i++){
+    const t=years[i-1], tp=years[i];
+    const common = projects.filter(p=>rowLookup.has(`${p}__${t}`) && rowLookup.has(`${p}__${tp}`));
+    const detail=[];
+    common.forEach(project=>{
+      const rt=rowLookup.get(`${project}__${t}`), rp=rowLookup.get(`${project}__${tp}`);
+      const crs_tt=getEff(rt,t,'CRS');
+      const crs_t_tp=getEff(rp,t,'CRS');
+      const crs_tp_t=getEff(rt,tp,'CRS');
+      const crs_tp_tp=getEff(rp,tp,'CRS');
+      const effch=safeDiv(crs_tp_tp, crs_tt);
+      const techch=Math.sqrt(Math.max(1e-12, safeDiv(crs_t_tp, crs_tp_tp) * safeDiv(crs_tt, crs_tp_t)));
+      const tfpch=effch*techch;
+      const growth=safeDiv(num(rp[outputKey])-num(rt[outputKey]), pos(rt[outputKey]))*100;
+      detail.push({effch,techch,tfpch,growth});
+    });
+    const outBase=avgFinite(common.map(p=>num(rowLookup.get(`${p}__${t}`)[outputKey])));
+    const outNext=avgFinite(common.map(p=>num(rowLookup.get(`${p}__${tp}`)[outputKey])));
+    const growth=safeDiv(outNext-outBase, pos(outBase))*100;
+    const tfpch=avgFinite(detail.map(d=>d.tfpch));
+    const effch=avgFinite(detail.map(d=>d.effch));
+    const techch=avgFinite(detail.map(d=>d.techch));
+    const contrib = Math.abs(growth)<1e-10 ? NaN : (tfpch-1)/(growth/100)*100;
+    resultRows.push({period:`${t}-${tp}`, tfpch, effch, techch, growth, contrib, n:common.length});
+  }
+  return {years, inputs, outputs, projects, resultRows, efficiencyRows, efficiencyAvgRow};
+}
+
+function renderEfficiency(){
+  const el=document.getElementById('effTable');
+  if(!currentResult || currentResult.error){ el.innerHTML = `<tbody><tr><td>${currentResult?.error || '暂无结果'}</td></tr></tbody>`; return; }
+  const headers=['项目', ...currentResult.years.map(y=>`${y}年`), '平均值'];
+  let html='<thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+  currentResult.efficiencyRows.forEach(r=>{
+    html += '<tr><td>'+r.project+'</td>' + currentResult.years.map(y=>`<td>${fmt(r[String(y)],4)}</td>`).join('') + `<td>${fmt(r.avg,4)}</td></tr>`;
+  });
+  html += '<tr><td><b>平均值</b></td>' + currentResult.years.map(y=>`<td><b>${fmt(currentResult.efficiencyAvgRow[String(y)],4)}</b></td>`).join('') + `<td><b>${fmt(currentResult.efficiencyAvgRow.avg,4)}</b></td></tr>`;
+  html += '</tbody>';
+  el.innerHTML = html;
+}
+function renderResults(){
+  document.getElementById('kDMU').textContent = uniq(panelRows.map(r=>r.project)).length;
+  document.getElementById('kIn').textContent = activeInputs().length;
+  document.getElementById('kOut').textContent = activeOutputs().length;
+  const el=document.getElementById('resultTable');
+  if(!currentResult || currentResult.error){ document.getElementById('kAvg').textContent='--'; el.innerHTML = `<tbody><tr><td>${currentResult?.error || '暂无结果'}</td></tr></tbody>`; renderSummaryTable(); return; }
+  const avgContrib = avgFinite(currentResult.resultRows.filter(r=>['2022-2023','2023-2024','2024-2025'].includes(r.period)).map(r=>r.contrib));
+  document.getElementById('kAvg').textContent = pct(avgContrib,2);
+  let html='<thead><tr><th>时期</th><th>tfpch</th><th>effch</th><th>techch</th><th>产量增长率/%</th><th>TFP对产出变化贡献率/%</th><th>共同DMU数</th></tr></thead><tbody>';
+  currentResult.resultRows.forEach(r=>{
+    html += `<tr><td>${r.period}</td><td>${fmt(r.tfpch,4)}</td><td>${fmt(r.effch,4)}</td><td>${fmt(r.techch,4)}</td><td>${fmt2(r.growth,2)}</td><td>${fmt2(r.contrib,2)}</td><td>${r.n}</td></tr>`;
+  });
+  html += '</tbody>';
+  el.innerHTML = html;
+  renderSummaryTable();
+}
+function recalcAll(full=true){
+  const outCount = activeOutputs().length;
+  if(outCount !== 1){ currentResult = {error:'请恰好选择1个产出指标。'}; renderIndicatorTable(); renderDataTable(); renderEfficiency(); renderResults(); return; }
+  if(activeInputs().length < 1){ currentResult = {error:'请至少选择1个投入指标。'}; renderIndicatorTable(); renderDataTable(); renderEfficiency(); renderResults(); return; }
+  currentResult = computeMalmquist(panelRows.filter(r=>r.project && num(r.year)>0));
+  renderIndicatorTable(); renderDataTable(); renderEfficiency(); renderResults();
+}
+function resetAll(){ indicators = clone(DEFAULT_INDICATORS); panelRows = buildDefaultPanel(); indicators.forEach(it=>ensureIndicatorFieldOnRows(it.key, 0)); renderIndicatorTable(); renderDataTable(); recalcAll(); }
+
+resetAll();
+</script>
+</body>
+</html>
